@@ -6,6 +6,7 @@ public class CurrencyExchangeDto {
 	private String currencyToCode;
 	private String currencyToName;
 	private double rate;
+	private String port;
 
 	public CurrencyExchangeDto(String currencyFrom, String currencyToCode, String currencyToName, double rate) {
 		super();
@@ -13,6 +14,7 @@ public class CurrencyExchangeDto {
 		this.currencyToCode = currencyToCode;
 		this.currencyToName = currencyToName;
 		this.rate = rate;
+		this.port = port;
 	}
 
 	public String getCurrencyFrom() {
@@ -45,6 +47,14 @@ public class CurrencyExchangeDto {
 
 	public void setRate(double rate) {
 		this.rate = rate;
+	}
+
+	public String getPort() {
+		return port;
+	}
+
+	public void setPort(String port) {
+		this.port = port;
 	}
 
 }
