@@ -23,7 +23,7 @@ public class CurrencyExchangeServiceImplementation implements CurrencyExchangeSe
 				String.format("https://www.floatrates.com/daily/%s.json", from);
 		SingleCurrencyStructure response = 
 				template.getForEntity(apiUrl, MultipleCurrenciesStructure.class)
-				.getBody().getCurrencies().get(to);
+				.getBody().getCurrencies().get(to.toLowerCase());
 			String port = enviroment.getProperty("local.server.port");
 		CurrencyExchangeDto finalResponse = 
 		new CurrencyExchangeDto(from.toUpperCase(), response.getCode(), response.getName(), response.getRate());
