@@ -6,19 +6,16 @@
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
 		<version>4.1.0</version>
-		<relativePath/> <!-- lookup parent from repository -->
+		<relativePath/>
 	</parent>
 	<groupId>soas</groupId>
 	<artifactId>users-service</artifactId>
 	<version>1.0.0</version>
 	<name>UsersService</name>
-	<description>Service responsible for managing application users</description>	<url/>
-	<licenses>
-		<license/>
-	</licenses>
-	<developers>
-		<developer/>
-	</developers>
+	<description>Service responsible for managing application users</description>
+	<url/>
+	<licenses><license/></licenses>
+	<developers><developer/></developers>
 	<scm>
 		<connection/>
 		<developerConnection/>
@@ -46,7 +43,10 @@
 			<groupId>org.springframework.cloud</groupId>
 			<artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
 		</dependency>
-
+		<dependency>
+			<groupId>org.springframework.cloud</groupId>
+			<artifactId>spring-cloud-starter-openfeign</artifactId>
+		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-devtools</artifactId>
@@ -84,13 +84,7 @@
 				<scope>import</scope>
 			</dependency>
 		</dependencies>
-	<dependency>
-    <groupId>soas</groupId>
-    <artifactId>service-library</artifactId>
-    <version>1.0.0</version>
-</dependency>
 	</dependencyManagement>
-
 	<build>
 		<plugins>
 			<plugin>
@@ -99,5 +93,4 @@
 			</plugin>
 		</plugins>
 	</build>
-
 </project>
