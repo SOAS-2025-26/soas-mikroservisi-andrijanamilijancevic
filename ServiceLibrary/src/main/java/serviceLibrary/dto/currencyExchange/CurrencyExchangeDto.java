@@ -14,7 +14,6 @@ public class CurrencyExchangeDto {
 		this.currencyToCode = currencyToCode;
 		this.currencyToName = currencyToName;
 		this.rate = rate;
-		this.port = port;
 	}
 
 	public String getCurrencyFrom() {
