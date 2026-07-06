@@ -11,6 +11,11 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.server.SecurityWebFilterChain;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.reactive.CorsConfigurationSource;
+import org.springframework.web.cors.reactive.UrlBasedCorsConfigurationSource;
+
+import java.util.List;
 
 @Configuration
 @EnableWebFluxSecurity
@@ -19,6 +24,19 @@ public class SecurityConfig {
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
+    }
+
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration config = new CorsConfiguration();
+        config.setAllowedOrigins(List.of("http://localhost:4200"));
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        config.setAllowedHeaders(List.of("*"));
+        config.setAllowCredentials(true);
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", config);
+        return source;
     }
 
     @Bean
@@ -47,8 +65,10 @@ public class SecurityConfig {
     @Bean
     public SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http) {
         http
+            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .csrf(csrf -> csrf.disable())
             .authorizeExchange(exchanges -> exchanges
+                .pathMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                 .pathMatchers("/currency-exchange/**").permitAll()
                 .pathMatchers("/crypto-exchange/**").permitAll()
                 .pathMatchers(HttpMethod.GET, "/currency-conversion/**").hasRole("USER")
@@ -67,7 +87,6 @@ public class SecurityConfig {
                 .pathMatchers(HttpMethod.DELETE, "/users/**").hasRole("OWNER")
                 .anyExchange().authenticated()
             )
-            .httpBasic(httpBasic -> httpBasic.disable())
             .httpBasic(org.springframework.security.config.Customizer.withDefaults());
 
         return http.build();

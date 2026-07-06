@@ -1,0 +1,33 @@
+<div class="row justify-content-center mt-4">
+  <div class="col-md-6">
+    <div class="card">
+      <div class="card-header bg-dark text-white">
+        <h5>Currency Conversion</h5>
+      </div>
+      <div class="card-body">
+        <div class="mb-3">
+          <label class="form-label">Od valute</label>
+          <input type="text" class="form-control" [(ngModel)]="from" placeholder="npr. USD">
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Do valute</label>
+          <input type="text" class="form-control" [(ngModel)]="to" placeholder="npr. EUR">
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Količina</label>
+          <input type="number" class="form-control" [(ngModel)]="quantity">
+        </div>
+        <button class="btn btn-dark w-100" (click)="convert()">Konvertuj</button>
+
+        <div *ngIf="errorMessage" class="alert alert-danger mt-3">{{ errorMessage }}</div>
+
+        <div *ngIf="result" class="alert alert-success mt-3">
+          <p><strong>Od:</strong> {{ result.quantity }} {{ result.exchange.currencyFrom }}</p>
+          <p><strong>Do:</strong> {{ result.exchangedAmount }} {{ result.exchange.currencyToCode }}</p>
+          <p><strong>Kurs:</strong> {{ result.exchange.rate }}</p>
+          <p><strong>Poruka:</strong> {{ result.message }}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,69 @@
+<div class="container mt-4">
+  <h4 class="mb-3">Crypto Wallet</h4>
+
+  <div *ngIf="errorMessage" class="alert alert-danger">{{ errorMessage }}</div>
+  <div *ngIf="successMessage" class="alert alert-success">{{ successMessage }}</div>
+
+  <!-- USER - vidi samo svoj novcanik -->
+  <div *ngIf="auth.isUser() && wallet">
+    <div class="card">
+      <div class="card-header bg-dark text-white">Moj novčanik</div>
+      <div class="card-body">
+        <p><strong>Email:</strong> {{ wallet.email }}</p>
+        <p><strong>Crypto:</strong> {{ wallet.currencyCode }}</p>
+        <p><strong>Stanje:</strong> {{ wallet.amount }}</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ADMIN - vidi sve novcanike -->
+  <div *ngIf="auth.isAdmin()">
+    <table class="table table-striped mb-4">
+      <thead class="table-dark">
+        <tr>
+          <th>Email</th>
+          <th>Crypto</th>
+          <th>Stanje</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let w of wallets">
+          <td>{{ w.email }}</td>
+          <td>{{ w.currencyCode }}</td>
+          <td>{{ w.amount }}</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Dodaj novcanik -->
+    <div class="card mb-3">
+      <div class="card-header bg-dark text-white">Dodaj novčanik</div>
+      <div class="card-body">
+        <input class="form-control mb-2" [(ngModel)]="newWallet.email" placeholder="Email">
+        <input class="form-control mb-2" [(ngModel)]="newWallet.currencyCode" placeholder="Crypto (ETH)">
+        <input class="form-control mb-2" type="number" [(ngModel)]="newWallet.amount" placeholder="Iznos">
+        <button class="btn btn-success" (click)="createWallet()">Dodaj</button>
+      </div>
+    </div>
+
+    <!-- Azuriraj novcanik -->
+    <div class="card mb-3">
+      <div class="card-header bg-dark text-white">Ažuriraj novčanik</div>
+      <div class="card-body">
+        <input class="form-control mb-2" [(ngModel)]="updateData.email" placeholder="Email">
+        <input class="form-control mb-2" [(ngModel)]="updateData.currencyCode" placeholder="Crypto">
+        <input class="form-control mb-2" type="number" [(ngModel)]="updateData.amount" placeholder="Iznos">
+        <button class="btn btn-warning" (click)="updateWallet()">Ažuriraj</button>
+      </div>
+    </div>
+
+    <!-- Obrisi novcanik -->
+    <div class="card mb-3">
+      <div class="card-header bg-dark text-white">Obriši novčanik</div>
+      <div class="card-body">
+        <input class="form-control mb-2" [(ngModel)]="deleteEmail" placeholder="Email">
+        <button class="btn btn-danger" (click)="deleteWallet()">Obriši</button>
+      </div>
+    </div>
+  </div>
+</div>

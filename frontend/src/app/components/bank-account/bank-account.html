@@ -1,0 +1,69 @@
+<div class="container mt-4">
+  <h4 class="mb-3">Bank Account</h4>
+
+  <div *ngIf="errorMessage" class="alert alert-danger">{{ errorMessage }}</div>
+  <div *ngIf="successMessage" class="alert alert-success">{{ successMessage }}</div>
+
+  <!-- USER - vidi samo svoj racun -->
+  <div *ngIf="auth.isUser() && account">
+    <div class="card">
+      <div class="card-header bg-dark text-white">Moj račun</div>
+      <div class="card-body">
+        <p><strong>Email:</strong> {{ account.email }}</p>
+        <p><strong>Valuta:</strong> {{ account.currencyCode }}</p>
+        <p><strong>Stanje:</strong> {{ account.amount }}</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ADMIN - vidi sve racune -->
+  <div *ngIf="auth.isAdmin()">
+    <table class="table table-striped mb-4">
+      <thead class="table-dark">
+        <tr>
+          <th>Email</th>
+          <th>Valuta</th>
+          <th>Stanje</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let acc of accounts">
+          <td>{{ acc.email }}</td>
+          <td>{{ acc.currencyCode }}</td>
+          <td>{{ acc.amount }}</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Dodaj racun -->
+    <div class="card mb-3">
+      <div class="card-header bg-dark text-white">Dodaj račun</div>
+      <div class="card-body">
+        <input class="form-control mb-2" [(ngModel)]="newAccount.email" placeholder="Email">
+        <input class="form-control mb-2" [(ngModel)]="newAccount.currencyCode" placeholder="Valuta (EUR)">
+        <input class="form-control mb-2" type="number" [(ngModel)]="newAccount.amount" placeholder="Iznos">
+        <button class="btn btn-success" (click)="createAccount()">Dodaj</button>
+      </div>
+    </div>
+
+    <!-- Azuriraj racun -->
+    <div class="card mb-3">
+      <div class="card-header bg-dark text-white">Ažuriraj račun</div>
+      <div class="card-body">
+        <input class="form-control mb-2" [(ngModel)]="updateData.email" placeholder="Email">
+        <input class="form-control mb-2" [(ngModel)]="updateData.currencyCode" placeholder="Valuta">
+        <input class="form-control mb-2" type="number" [(ngModel)]="updateData.amount" placeholder="Iznos">
+        <button class="btn btn-warning" (click)="updateAccount()">Ažuriraj</button>
+      </div>
+    </div>
+
+    <!-- Obrisi racun -->
+    <div class="card mb-3">
+      <div class="card-header bg-dark text-white">Obriši račun</div>
+      <div class="card-body">
+        <input class="form-control mb-2" [(ngModel)]="deleteEmail" placeholder="Email">
+        <button class="btn btn-danger" (click)="deleteAccount()">Obriši</button>
+      </div>
+    </div>
+  </div>
+</div>

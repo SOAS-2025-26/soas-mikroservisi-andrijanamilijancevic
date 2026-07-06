@@ -1,0 +1,37 @@
+<div class="row justify-content-center mt-4">
+  <div class="col-md-6">
+    <div class="card">
+      <div class="card-header bg-dark text-white">
+        <h5>Crypto Exchange</h5>
+      </div>
+      <div class="card-body">
+        <div class="mb-3">
+          <label class="form-label">Crypto valuta</label>
+          <select class="form-select" [(ngModel)]="from">
+            <option value="BTC">Bitcoin (BTC)</option>
+            <option value="ETH">Ethereum (ETH)</option>
+            <option value="SOL">Solana (SOL)</option>
+            <option value="ADA">Cardano (ADA)</option>
+            <option value="DOGE">Dogecoin (DOGE)</option>
+            <option value="XRP">Ripple (XRP)</option>
+            <option value="DOT">Polkadot (DOT)</option>
+            <option value="LTC">Litecoin (LTC)</option>
+          </select>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Do valute</label>
+          <input type="text" class="form-control" [(ngModel)]="to" placeholder="npr. USD">
+        </div>
+        <button class="btn btn-dark w-100" (click)="getRate()">Dohvati kurs</button>
+
+        <div *ngIf="errorMessage" class="alert alert-danger mt-3">{{ errorMessage }}</div>
+
+        <div *ngIf="result" class="alert alert-success mt-3">
+          <p><strong>Crypto:</strong> {{ result.cryptoCode }}</p>
+          <p><strong>Valuta:</strong> {{ result.targetCurrency }}</p>
+          <p><strong>Kurs:</strong> {{ result.rate }}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,29 @@
+<div class="row justify-content-center mt-5">
+  <div class="col-md-4">
+    <div class="card">
+      <div class="card-header bg-dark text-white text-center">
+        <h4>Login</h4>
+      </div>
+      <div class="card-body">
+        <div class="mb-3">
+          <label class="form-label">Email</label>
+          <input type="email" class="form-control" [(ngModel)]="email" placeholder="email@example.com">
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Lozinka</label>
+          <input type="password" class="form-control" [(ngModel)]="password" placeholder="Lozinka">
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Uloga</label>
+          <select class="form-select" [(ngModel)]="role">
+            <option value="USER">USER</option>
+            <option value="ADMIN">ADMIN</option>
+            <option value="OWNER">OWNER</option>
+          </select>
+        </div>
+        <div *ngIf="errorMessage" class="alert alert-danger">{{ errorMessage }}</div>
+        <button class="btn btn-dark w-100" (click)="login()">Prijavi se</button>
+      </div>
+    </div>
+  </div>
+</div>

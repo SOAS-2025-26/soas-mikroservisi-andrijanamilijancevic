@@ -1,0 +1,44 @@
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+  <div class="container">
+    <a class="navbar-brand" href="#">SOAS Exchange</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav me-auto">
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/currency-exchange">Currency Exchange</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/crypto-exchange">Crypto Exchange</a>
+        </li>
+        <li class="nav-item" *ngIf="auth.isLoggedIn()">
+          <a class="nav-link" routerLink="/currency-conversion">Currency Conversion</a>
+        </li>
+        <li class="nav-item" *ngIf="auth.isUser()">
+          <a class="nav-link" routerLink="/trade">Trade</a>
+        </li>
+        <li class="nav-item" *ngIf="auth.isLoggedIn()">
+          <a class="nav-link" routerLink="/bank-account">Bank Account</a>
+        </li>
+        <li class="nav-item" *ngIf="auth.isLoggedIn()">
+          <a class="nav-link" routerLink="/crypto-wallet">Crypto Wallet</a>
+        </li>
+        <li class="nav-item" *ngIf="auth.isAdmin() || auth.isOwner()">
+          <a class="nav-link" routerLink="/users">Users</a>
+        </li>
+      </ul>
+      <ul class="navbar-nav">
+        <li class="nav-item" *ngIf="!auth.isLoggedIn()">
+          <a class="nav-link" routerLink="/login">Login</a>
+        </li>
+        <li class="nav-item" *ngIf="auth.isLoggedIn()">
+          <a class="nav-link" routerLink="/login">{{ auth.getEmail() }}</a>
+        </li>
+        <li class="nav-item" *ngIf="auth.isLoggedIn()">
+          <button class="btn btn-outline-light btn-sm mt-1" (click)="logout()">Odjavi se</button>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>

@@ -1,0 +1,60 @@
+<div class="container mt-4">
+  <h4 class="mb-3">Users</h4>
+
+  <div *ngIf="errorMessage" class="alert alert-danger">{{ errorMessage }}</div>
+  <div *ngIf="successMessage" class="alert alert-success">{{ successMessage }}</div>
+
+  <!-- Lista korisnika -->
+  <table class="table table-striped mb-4">
+    <thead class="table-dark">
+      <tr>
+        <th>Email</th>
+        <th>Uloga</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let user of users">
+        <td>{{ user.email }}</td>
+        <td>{{ user.role }}</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- Dodaj korisnika -->
+  <div class="card mb-3">
+    <div class="card-header bg-dark text-white">Dodaj korisnika</div>
+    <div class="card-body">
+      <input class="form-control mb-2" [(ngModel)]="newUser.email" placeholder="Email">
+      <input class="form-control mb-2" type="password" [(ngModel)]="newUser.password" placeholder="Lozinka">
+      <select class="form-select mb-2" [(ngModel)]="newUser.role">
+        <option value="USER">USER</option>
+        <option value="ADMIN">ADMIN</option>
+        <option *ngIf="auth.isOwner()" value="OWNER">OWNER</option>
+      </select>
+      <button class="btn btn-success" (click)="createUser()">Dodaj</button>
+    </div>
+  </div>
+
+  <!-- Azuriraj korisnika -->
+  <div class="card mb-3">
+    <div class="card-header bg-dark text-white">Ažuriraj korisnika</div>
+    <div class="card-body">
+      <input class="form-control mb-2" [(ngModel)]="updateData.email" placeholder="Email">
+      <input class="form-control mb-2" type="password" [(ngModel)]="updateData.password" placeholder="Nova lozinka">
+      <select class="form-select mb-2" [(ngModel)]="updateData.role">
+        <option value="USER">USER</option>
+        <option value="ADMIN">ADMIN</option>
+      </select>
+      <button class="btn btn-warning" (click)="updateUser()">Ažuriraj</button>
+    </div>
+  </div>
+
+  <!-- Obrisi korisnika -->
+  <div *ngIf="auth.isOwner()" class="card mb-3">
+    <div class="card-header bg-dark text-white">Obriši korisnika</div>
+    <div class="card-body">
+      <input class="form-control mb-2" [(ngModel)]="deleteEmail" placeholder="Email">
+      <button class="btn btn-danger" (click)="deleteUser()">Obriši</button>
+    </div>
+  </div>
+</div>

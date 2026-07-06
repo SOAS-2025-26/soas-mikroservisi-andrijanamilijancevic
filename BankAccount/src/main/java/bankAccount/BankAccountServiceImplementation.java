@@ -30,8 +30,8 @@ public class BankAccountServiceImplementation implements BankAccountService {
             }
             return ResponseEntity.ok(dtos);
         }
-        return ResponseEntity.status(404).body("Currently no bank accounts in database");
-    }
+        return ResponseEntity.ok(dtos);
+        }
 
     @Override
     public ResponseEntity<?> getAccountByEmail(String email) {

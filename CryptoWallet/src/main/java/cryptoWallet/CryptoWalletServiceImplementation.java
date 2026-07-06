@@ -30,8 +30,8 @@ public class CryptoWalletServiceImplementation implements CryptoWalletService {
             }
             return ResponseEntity.ok(dtos);
         }
-        return ResponseEntity.status(404).body("Currently no crypto wallets in database");
-    }
+        return ResponseEntity.ok(dtos);
+        }
 
     @Override
     public ResponseEntity<?> getWalletByEmail(String email) {

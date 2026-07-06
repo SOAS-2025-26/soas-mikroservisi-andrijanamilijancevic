@@ -38,13 +38,10 @@ public class UsersServiceImplementation implements UsersService {
     public ResponseEntity<?> getAllUsers() {
         List<UserModel> models = repo.findAll();
         List<UserDto> dtos = new ArrayList<>();
-        if (!models.isEmpty()) {
-            for (UserModel m : models) {
-                dtos.add(modelToDto(m));
-            }
-            return ResponseEntity.ok(dtos);
+        for (UserModel m : models) {
+            dtos.add(modelToDto(m));
         }
-        return ResponseEntity.status(404).body("Currently no users in database");
+        return ResponseEntity.ok(dtos);
     }
 
     @Override
@@ -77,7 +74,6 @@ public class UsersServiceImplementation implements UsersService {
                 body.getEmail(), body.getPassword(), body.getRole().toUpperCase());
         repo.save(newUser);
 
-        // automatski kreiraj bank account i crypto wallet za USER
         if (body.getRole().equalsIgnoreCase("USER")) {
             bankAccountProxy.createAccount(
                     new BankAccountDto(body.getEmail(), "EUR", 0.0));
@@ -107,7 +103,6 @@ public class UsersServiceImplementation implements UsersService {
                     .body("User with email: " + email + " not found!");
         }
 
-        // automatski obrisi bank account i crypto wallet ako je USER
         if (existing.getRole().equalsIgnoreCase("USER")) {
             try { bankAccountProxy.deleteAccount(email); } catch (Exception e) {}
             try { cryptoWalletProxy.deleteWallet(email); } catch (Exception e) {}
