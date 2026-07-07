@@ -3,19 +3,22 @@ package apiGateway.security;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.security.authentication.ReactiveAuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
-import org.springframework.security.core.userdetails.MapReactiveUserDetailsService;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.server.SecurityWebFilterChain;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.reactive.CorsConfigurationSource;
 import org.springframework.web.cors.reactive.UrlBasedCorsConfigurationSource;
+import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Mono;
 
 import java.util.List;
+import java.util.Map;
 
 @Configuration
 @EnableWebFluxSecurity
@@ -24,6 +27,11 @@ public class SecurityConfig {
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
+    }
+
+    @Bean
+    public WebClient webClient() {
+        return WebClient.builder().build();
     }
 
     @Bean
@@ -40,35 +48,42 @@ public class SecurityConfig {
     }
 
     @Bean
-    public MapReactiveUserDetailsService userDetailsService(PasswordEncoder encoder) {
-        UserDetails owner = User.builder()
-                .username("owner@soas.com")
-                .password(encoder.encode("owner123"))
-                .roles("OWNER")
-                .build();
+    public ReactiveAuthenticationManager authenticationManager(WebClient webClient) {
+        return authentication -> {
+            String email = authentication.getName();
+            String password = authentication.getCredentials().toString();
 
-        UserDetails admin = User.builder()
-                .username("admin@soas.com")
-                .password(encoder.encode("admin123"))
-                .roles("ADMIN")
-                .build();
+            return webClient.get()
+                    .uri("http://localhost:8770/users/email?email=" + email)
+                    .retrieve()
+                    .onStatus(status -> status.is4xxClientError(),
+                        response -> Mono.error(new RuntimeException("User not found")))
+                    .bodyToMono(Map.class)
+                    .flatMap(user -> {
+                        String storedPassword = (String) user.get("password");
+                        String role = (String) user.get("role");
 
-        UserDetails user = User.builder()
-                .username("user@soas.com")
-                .password(encoder.encode("user123"))
-                .roles("USER")
-                .build();
-
-        return new MapReactiveUserDetailsService(owner, admin, user);
+                        if (password.equals(storedPassword)) {
+                            return Mono.just(new UsernamePasswordAuthenticationToken(
+                                    email, password,
+                                    List.of(new SimpleGrantedAuthority("ROLE_" + role))));
+                        } else {
+                            return Mono.error(new RuntimeException("Invalid credentials"));
+                        }
+                    });
+        };
     }
 
     @Bean
-    public SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http) {
+    public SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http,
+            ReactiveAuthenticationManager authenticationManager) {
         http
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .csrf(csrf -> csrf.disable())
+            .authenticationManager(authenticationManager)
             .authorizeExchange(exchanges -> exchanges
                 .pathMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                .pathMatchers(HttpMethod.GET, "/users/login/**").permitAll()
                 .pathMatchers("/currency-exchange/**").permitAll()
                 .pathMatchers("/crypto-exchange/**").permitAll()
                 .pathMatchers(HttpMethod.GET, "/currency-conversion/**").hasRole("USER")

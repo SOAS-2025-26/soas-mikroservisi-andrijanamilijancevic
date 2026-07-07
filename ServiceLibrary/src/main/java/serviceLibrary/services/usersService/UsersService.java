@@ -28,4 +28,7 @@ public interface UsersService {
 
     @DeleteMapping("/users")
     ResponseEntity<?> deleteUser(@RequestParam String email);
+    
+    @GetMapping("/users/login")
+    ResponseEntity<?> loginUser(@RequestParam String email, @RequestParam String password);
 }

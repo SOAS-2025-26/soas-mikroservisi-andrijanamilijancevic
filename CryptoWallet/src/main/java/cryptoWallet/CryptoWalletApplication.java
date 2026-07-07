@@ -3,9 +3,11 @@ package cryptoWallet;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
+import org.springframework.context.annotation.ComponentScan;
 
 @SpringBootApplication
 @EnableDiscoveryClient
+@ComponentScan(basePackages = {"util.exceptions", "cryptoWallet"})
 public class CryptoWalletApplication {
 
 	public static void main(String[] args) {

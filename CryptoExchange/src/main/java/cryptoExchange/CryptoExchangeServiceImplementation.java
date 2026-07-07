@@ -2,7 +2,7 @@ package cryptoExchange;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.web.reactive.function.client.WebClient;
 
 import serviceLibrary.dto.cryptoExchange.CryptoExchangeDto;
 import serviceLibrary.services.cryptoExchange.CryptoExchangeService;
@@ -23,6 +23,8 @@ public class CryptoExchangeServiceImplementation implements CryptoExchangeServic
             "LTC", "litecoin"
     );
 
+    private final WebClient webClient = WebClient.builder().build();
+
     @Override
     public ResponseEntity<?> getExchangeRate(String from, String to) {
         String cryptoId = CRYPTO_IDS.get(from.toUpperCase());
@@ -36,8 +38,11 @@ public class CryptoExchangeServiceImplementation implements CryptoExchangeServic
                 + cryptoId + "&vs_currencies=" + targetCurrency;
 
         try {
-            RestTemplate restTemplate = new RestTemplate();
-            Map<String, Map<String, Object>> response = restTemplate.getForObject(url, Map.class);
+            Map<String, Map<String, Object>> response = webClient.get()
+                    .uri(url)
+                    .retrieve()
+                    .bodyToMono(Map.class)
+                    .block();
 
             if (response == null || !response.containsKey(cryptoId)) {
                 return ResponseEntity.status(400)
@@ -50,7 +55,8 @@ public class CryptoExchangeServiceImplementation implements CryptoExchangeServic
                         .body("Unsupported target currency: " + to);
             }
 
-            return ResponseEntity.ok(new CryptoExchangeDto(from.toUpperCase(), to.toUpperCase(), rate.doubleValue()));
+            return ResponseEntity.ok(new CryptoExchangeDto(
+                    from.toUpperCase(), to.toUpperCase(), rate.doubleValue()));
 
         } catch (Exception e) {
             return ResponseEntity.status(500)

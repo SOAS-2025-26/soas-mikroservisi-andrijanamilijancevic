@@ -13,16 +13,9 @@
           <label class="form-label">Lozinka</label>
           <input type="password" class="form-control" [(ngModel)]="password" placeholder="Lozinka">
         </div>
-        <div class="mb-3">
-          <label class="form-label">Uloga</label>
-          <select class="form-select" [(ngModel)]="role">
-            <option value="USER">USER</option>
-            <option value="ADMIN">ADMIN</option>
-            <option value="OWNER">OWNER</option>
-          </select>
-        </div>
         <div *ngIf="errorMessage" class="alert alert-danger">{{ errorMessage }}</div>
-        <button class="btn btn-dark w-100" (click)="login()">Prijavi se</button>
+        <div *ngIf="loading" class="alert alert-info">Prijavljivanje...</div>
+        <button class="btn btn-dark w-100" (click)="login()" [disabled]="loading">Prijavi se</button>
       </div>
     </div>
   </div>

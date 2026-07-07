@@ -1,10 +1,8 @@
 package currencyExchange.implementation;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.env.Environment;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.web.reactive.function.client.WebClient;
 
 import serviceLibrary.dto.currencyExchange.CurrencyExchangeDto;
 import serviceLibrary.dto.currencyExchange.MultipleCurrenciesStructure;
@@ -12,29 +10,40 @@ import serviceLibrary.dto.currencyExchange.SingleCurrencyStructure;
 import serviceLibrary.services.currencyExchange.CurrencyExchangeService;
 
 @RestController
-public class CurrencyExchangeServiceImplementation implements CurrencyExchangeService{
+public class CurrencyExchangeServiceImplementation implements CurrencyExchangeService {
 
-	private RestTemplate template = new RestTemplate();
-	@Autowired
-	private Environment enviroment;
-	@Override
-	public ResponseEntity<?> getExchange(String from, String to) {
-		String apiUrl = 
-				String.format("https://www.floatrates.com/daily/%s.json", from);
-		SingleCurrencyStructure response = 
-				template.getForEntity(apiUrl, MultipleCurrenciesStructure.class)
-				.getBody().getCurrencies().get(to.toLowerCase());
-			String port = enviroment.getProperty("local.server.port");
-		CurrencyExchangeDto finalResponse = 
-		new CurrencyExchangeDto(from.toUpperCase(), response.getCode(), response.getName(), response.getRate());
-		return ResponseEntity.ok(finalResponse);
-	}
-	
-//	@GetMapping("test")
-//	public ResponseEntity<?> testAPI(){
-//		ResponseEntity<Object> response = 
-//				template.getForEntity("https://www.floatrates.com/daily/eur.json"
-//				, Object.class);
-//		return ResponseEntity.ok(response.getBody());
-//	}
+    private final WebClient webClient = WebClient.builder().build();
+
+    @Override
+    public ResponseEntity<?> getExchange(String from, String to) {
+        String apiUrl = String.format("https://www.floatrates.com/daily/%s.json", from.toLowerCase());
+
+        try {
+            MultipleCurrenciesStructure response = webClient.get()
+                    .uri(apiUrl)
+                    .retrieve()
+                    .bodyToMono(MultipleCurrenciesStructure.class)
+                    .block();
+
+            if (response == null || response.getCurrencies() == null) {
+                return ResponseEntity.status(400)
+                        .body("Could not fetch rates for currency: " + from);
+            }
+
+            SingleCurrencyStructure currency = response.getCurrencies().get(to.toLowerCase());
+            if (currency == null) {
+                return ResponseEntity.status(400)
+                        .body("Currency not found: " + to);
+            }
+
+            CurrencyExchangeDto finalResponse = new CurrencyExchangeDto(
+                    from.toUpperCase(), currency.getCode(), currency.getName(), currency.getRate());
+
+            return ResponseEntity.ok(finalResponse);
+
+        } catch (Exception e) {
+            return ResponseEntity.status(500)
+                    .body("Error fetching exchange rate: " + e.getMessage());
+        }
+    }
 }

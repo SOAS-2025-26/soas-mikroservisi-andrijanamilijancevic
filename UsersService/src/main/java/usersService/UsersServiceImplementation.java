@@ -28,6 +28,7 @@ public class UsersServiceImplementation implements UsersService {
     @Autowired
     private CryptoWalletProxy cryptoWalletProxy;
 
+  
     private final ObjectMapper mapper = new ObjectMapper();
 
     public UserDto modelToDto(UserModel model) {
@@ -69,9 +70,12 @@ public class UsersServiceImplementation implements UsersService {
                         .body("Owner already exists in the system!");
             }
         }
+        
 
         UserModel newUser = new UserModel(
-                body.getEmail(), body.getPassword(), body.getRole().toUpperCase());
+                body.getEmail(),
+                body.getPassword(),
+                body.getRole().toUpperCase());
         repo.save(newUser);
 
         if (body.getRole().equalsIgnoreCase("USER")) {
@@ -91,7 +95,9 @@ public class UsersServiceImplementation implements UsersService {
             return ResponseEntity.status(404)
                     .body("User with email: " + body.getEmail() + " not found!");
         }
-        repo.updateUser(body.getEmail(), body.getPassword(), body.getRole().toUpperCase());
+        repo.updateUser(body.getEmail(),
+        		body.getPassword(),
+        		body.getRole().toUpperCase());
         return ResponseEntity.ok(modelToDto(repo.findByEmailIgnoreCase(body.getEmail())));
     }
 
@@ -110,5 +116,18 @@ public class UsersServiceImplementation implements UsersService {
 
         repo.delete(existing);
         return ResponseEntity.ok("User with email: " + email + " successfully deleted!");
+    }
+    @Override
+    public ResponseEntity<?> loginUser(String email, String password) {
+        UserModel model = repo.findByEmailIgnoreCase(email);
+        if (model == null) {
+            return ResponseEntity.status(404)
+                    .body("User with email: " + email + " not found!");
+        }
+        if (!model.getPassword().equals(password)) {
+            return ResponseEntity.status(401)
+                    .body("Invalid password!");
+        }
+        return ResponseEntity.ok(modelToDto(model));
     }
 }

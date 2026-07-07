@@ -64,6 +64,9 @@ export class ApiService {
   deleteUser(email: string) {
     return this.http.delete(`${this.baseUrl}/users?email=${email}`, { headers: this.getHeaders() });
   }
+  loginUser(email: string, password: string) {
+    return this.http.get(`${this.baseUrl}/users/login?email=${email}&password=${password}`);
+}
 
   // Bank Account
   getAllAccounts() {

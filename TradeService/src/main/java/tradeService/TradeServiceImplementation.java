@@ -6,6 +6,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 
 import feign.FeignException;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import serviceLibrary.dto.bankAccount.BankAccountDto;
 import serviceLibrary.dto.cryptoExchange.CryptoExchangeDto;
 import serviceLibrary.dto.cryptoWallet.CryptoWalletDto;
@@ -41,6 +42,7 @@ public class TradeServiceImplementation implements TradeService {
     private CurrencyConversionProxy currencyConversionProxy;
 
     @Override
+    @CircuitBreaker(name = "tradeService", fallbackMethod = "tradeFallback")
     public ResponseEntity<?> trade(String from, String to, double quantity, String email) {
         boolean fromIsCrypto = CRYPTO_CODES.contains(from.toUpperCase());
         boolean toIsCrypto = CRYPTO_CODES.contains(to.toUpperCase());
@@ -106,7 +108,7 @@ public class TradeServiceImplementation implements TradeService {
         if (!from.equals("USD") && !from.equals("EUR")) {
             try {
                 CurrencyConversionDto converted = mapper.convertValue(
-                        currencyConversionProxy.currencyConversion(from, "USD", quantity).getBody(),
+                        currencyConversionProxy.currencyConversion(from, "USD", quantity, email).getBody(),
                         CurrencyConversionDto.class);
                 baseCurrency = "USD";
                 baseQuantity = converted.getExchangedAmount();
@@ -185,7 +187,7 @@ public class TradeServiceImplementation implements TradeService {
         if (!to.equals("USD") && !to.equals("EUR")) {
             try {
                 CurrencyConversionDto converted = mapper.convertValue(
-                        currencyConversionProxy.currencyConversion(targetFiat, to, fiatAmount).getBody(),
+                        currencyConversionProxy.currencyConversion(targetFiat, to, fiatAmount, email).getBody(),
                         CurrencyConversionDto.class);
                 fiatAmount = converted.getExchangedAmount();
             } catch (FeignException e) {
@@ -213,5 +215,9 @@ public class TradeServiceImplementation implements TradeService {
                 + " for " + to + ": " + fiatAmount;
         return ResponseEntity.ok(new TradeResponseDto(message,
                 new BankAccountDto(account.getEmail(), to, account.getAmount() + fiatAmount)));
+    }
+    public ResponseEntity<?> tradeFallback(String from, String to, double quantity, String email, Exception e) {
+        return ResponseEntity.status(503)
+                .body("Trade service is currently unavailable. Please try again later. Error: " + e.getMessage());
     }
 }

@@ -8,8 +8,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 @Service
 public interface CurrencyConversionService {
 
-	@GetMapping("/currency-conversion")
-	ResponseEntity<?> currencyConversion(@RequestParam String from,
-			@RequestParam String to,
-			@RequestParam double quantity);
+    @GetMapping("/currency-conversion")
+    ResponseEntity<?> currencyConversion(@RequestParam String from,
+            @RequestParam String to,
+            @RequestParam double quantity,
+            @RequestParam String email);
 }
