@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import jakarta.servlet.http.HttpServletRequest;
 import serviceLibrary.dto.bankAccount.BankAccountDto;
 import serviceLibrary.dto.cryptoWallet.CryptoWalletDto;
 import serviceLibrary.dto.usersService.UserDto;
@@ -27,6 +28,9 @@ public class UsersServiceImplementation implements UsersService {
 
     @Autowired
     private CryptoWalletProxy cryptoWalletProxy;
+    
+    @Autowired
+    private HttpServletRequest request;
 
   
     private final ObjectMapper mapper = new ObjectMapper();
@@ -57,6 +61,11 @@ public class UsersServiceImplementation implements UsersService {
 
     @Override
     public ResponseEntity<?> createUser(UserDto body) {
+    	String callerRole = request.getHeader("X-User-Role");
+        if ("ADMIN".equalsIgnoreCase(callerRole) && !"USER".equalsIgnoreCase(body.getRole())) {
+            return ResponseEntity.status(403)
+                    .body("Admin can only create users with role USER!");
+        }
         if (repo.findByEmailIgnoreCase(body.getEmail()) != null) {
             return ResponseEntity.status(409)
                     .body("User with email: " + body.getEmail() + " already exists!");
@@ -90,10 +99,16 @@ public class UsersServiceImplementation implements UsersService {
 
     @Override
     public ResponseEntity<?> updateUser(UserDto body) {
-        UserModel existing = repo.findByEmailIgnoreCase(body.getEmail());
+    	UserModel existing = repo.findByEmailIgnoreCase(body.getEmail());
         if (existing == null) {
             return ResponseEntity.status(404)
                     .body("User with email: " + body.getEmail() + " not found!");
+        }
+        String callerRole = request.getHeader("X-User-Role");
+        if ("ADMIN".equalsIgnoreCase(callerRole)
+                && (!"USER".equalsIgnoreCase(existing.getRole()) || !"USER".equalsIgnoreCase(body.getRole()))) {
+            return ResponseEntity.status(403)
+                    .body("Admin can only update users with role USER, and cannot change their role!");
         }
         repo.updateUser(body.getEmail(),
         		body.getPassword(),

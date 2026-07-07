@@ -7,15 +7,16 @@ import { BankAccountComponent } from './components/bank-account/bank-account';
 import { CurrencyConversionComponent } from './components/currency-conversion/currency-conversion';
 import { CryptoWalletComponent } from './components/crypto-wallet/crypto-wallet';
 import { UsersComponent } from './components/users/users';
+import { authGuard } from './guards/auth-guard';
 
 export const routes: Routes = [
   { path: '', redirectTo: '/login', pathMatch: 'full' },
   { path: 'login', component: LoginComponent },
   { path: 'currency-exchange', component: CurrencyExchangeComponent },
   { path: 'crypto-exchange', component: CryptoExchangeComponent },
-  { path: 'currency-conversion', component: CurrencyConversionComponent },
-  { path: 'trade', component: TradeComponent },
-  { path: 'bank-account', component: BankAccountComponent },
-  { path: 'crypto-wallet', component: CryptoWalletComponent },
-  { path: 'users', component: UsersComponent }
+  { path: 'currency-conversion', component: CurrencyConversionComponent, canActivate: [authGuard] },
+  { path: 'trade', component: TradeComponent, canActivate: [authGuard] },
+  { path: 'bank-account', component: BankAccountComponent, canActivate: [authGuard] },
+  { path: 'crypto-wallet', component: CryptoWalletComponent, canActivate: [authGuard] },
+  { path: 'users', component: UsersComponent, canActivate: [authGuard] }
 ];

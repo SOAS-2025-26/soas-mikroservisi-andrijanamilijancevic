@@ -1,5 +1,6 @@
 package apiGateway.security;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -23,6 +24,9 @@ import java.util.Map;
 @Configuration
 @EnableWebFluxSecurity
 public class SecurityConfig {
+	
+	@Value("${users.service.url:http://localhost:8770}")
+    private String usersServiceUrl;
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -54,8 +58,7 @@ public class SecurityConfig {
             String password = authentication.getCredentials().toString();
 
             return webClient.get()
-                    .uri("http://localhost:8770/users/email?email=" + email)
-                    .retrieve()
+            		.uri(usersServiceUrl + "/users/email?email=" + email)                    .retrieve()
                     .onStatus(status -> status.is4xxClientError(),
                         response -> Mono.error(new RuntimeException("User not found")))
                     .bodyToMono(Map.class)
@@ -88,10 +91,12 @@ public class SecurityConfig {
                 .pathMatchers("/crypto-exchange/**").permitAll()
                 .pathMatchers(HttpMethod.GET, "/currency-conversion/**").hasRole("USER")
                 .pathMatchers(HttpMethod.GET, "/trade-service/**").hasRole("USER")
+                .pathMatchers(HttpMethod.GET, "/bank-account").hasRole("ADMIN")
                 .pathMatchers(HttpMethod.GET, "/bank-account/**").hasAnyRole("ADMIN", "USER")
                 .pathMatchers(HttpMethod.POST, "/bank-account/**").hasRole("ADMIN")
                 .pathMatchers(HttpMethod.PUT, "/bank-account/**").hasRole("ADMIN")
                 .pathMatchers(HttpMethod.DELETE, "/bank-account/**").hasRole("ADMIN")
+                .pathMatchers(HttpMethod.GET, "/crypto-wallet").hasRole("ADMIN")
                 .pathMatchers(HttpMethod.GET, "/crypto-wallet/**").hasAnyRole("ADMIN", "USER")
                 .pathMatchers(HttpMethod.POST, "/crypto-wallet/**").hasRole("ADMIN")
                 .pathMatchers(HttpMethod.PUT, "/crypto-wallet/**").hasRole("ADMIN")

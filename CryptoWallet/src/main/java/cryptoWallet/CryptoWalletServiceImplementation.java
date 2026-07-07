@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 
+import jakarta.servlet.http.HttpServletRequest;
 import serviceLibrary.dto.cryptoWallet.CryptoWalletDto;
 import serviceLibrary.services.cryptoWallet.CryptoWalletService;
 
@@ -15,6 +16,8 @@ public class CryptoWalletServiceImplementation implements CryptoWalletService {
 
     @Autowired
     private CryptoWalletRepository repo;
+    @Autowired
+    private HttpServletRequest request;
 
     public CryptoWalletDto modelToDto(CryptoWalletModel model) {
         return new CryptoWalletDto(model.getEmail(), model.getCurrencyCode(), model.getAmount());
@@ -31,6 +34,11 @@ public class CryptoWalletServiceImplementation implements CryptoWalletService {
 
     @Override
     public ResponseEntity<?> getWalletsByEmail(String email) {
+    	 String callerRole = request.getHeader("X-User-Role");
+         String callerEmail = request.getHeader("X-User-Email");
+         if ("USER".equalsIgnoreCase(callerRole) && !email.equalsIgnoreCase(callerEmail)) {
+             return ResponseEntity.status(403).body("Not authorized to view another user's wallet!");
+         }
         List<CryptoWalletModel> models = repo.findByEmailIgnoreCase(email);
         if (models.isEmpty()) {
             return ResponseEntity.status(404)
@@ -45,6 +53,11 @@ public class CryptoWalletServiceImplementation implements CryptoWalletService {
 
     @Override
     public ResponseEntity<?> getWalletByEmailAndCurrency(String email, String currencyCode) {
+    	String callerRole = request.getHeader("X-User-Role");
+        String callerEmail = request.getHeader("X-User-Email");
+        if ("USER".equalsIgnoreCase(callerRole) && !email.equalsIgnoreCase(callerEmail)) {
+            return ResponseEntity.status(403).body("Not authorized to view another user's wallet!");
+        }
         CryptoWalletModel model = repo.findByEmailIgnoreCaseAndCurrencyCodeIgnoreCase(email, currencyCode);
         if (model == null) {
             return ResponseEntity.status(404)

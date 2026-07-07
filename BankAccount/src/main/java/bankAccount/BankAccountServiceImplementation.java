@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 
+import jakarta.servlet.http.HttpServletRequest;
 import serviceLibrary.dto.bankAccount.BankAccountDto;
 import serviceLibrary.services.bankAccount.BankAccountService;
 
@@ -15,6 +16,8 @@ public class BankAccountServiceImplementation implements BankAccountService {
 
     @Autowired
     private BankAccountRepository repo;
+    @Autowired
+    private HttpServletRequest request;
 
     public BankAccountDto modelToDto(BankAccountModel model) {
         return new BankAccountDto(model.getEmail(), model.getCurrencyCode(), model.getAmount());
@@ -31,6 +34,11 @@ public class BankAccountServiceImplementation implements BankAccountService {
 
     @Override
     public ResponseEntity<?> getAccountsByEmail(String email) {
+    	String callerRole = request.getHeader("X-User-Role");
+        String callerEmail = request.getHeader("X-User-Email");
+        if ("USER".equalsIgnoreCase(callerRole) && !email.equalsIgnoreCase(callerEmail)) {
+            return ResponseEntity.status(403).body("Not authorized to view another user's account!");
+        }
         List<BankAccountModel> models = repo.findByEmailIgnoreCase(email);
         if (models.isEmpty()) {
             return ResponseEntity.status(404)
@@ -45,6 +53,11 @@ public class BankAccountServiceImplementation implements BankAccountService {
 
     @Override
     public ResponseEntity<?> getAccountByEmailAndCurrency(String email, String currencyCode) {
+    	 String callerRole = request.getHeader("X-User-Role");
+         String callerEmail = request.getHeader("X-User-Email");
+         if ("USER".equalsIgnoreCase(callerRole) && !email.equalsIgnoreCase(callerEmail)) {
+             return ResponseEntity.status(403).body("Not authorized to view another user's account!");
+         }
         BankAccountModel model = repo.findByEmailIgnoreCaseAndCurrencyCodeIgnoreCase(email, currencyCode);
         if (model == null) {
             return ResponseEntity.status(404)
