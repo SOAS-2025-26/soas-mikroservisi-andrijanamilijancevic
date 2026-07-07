@@ -16,6 +16,7 @@ public class CryptoWalletServiceImplementation implements CryptoWalletService {
 
     @Autowired
     private CryptoWalletRepository repo;
+    
     @Autowired
     private HttpServletRequest request;
 
@@ -23,8 +24,17 @@ public class CryptoWalletServiceImplementation implements CryptoWalletService {
         return new CryptoWalletDto(model.getEmail(), model.getCurrencyCode(), model.getAmount());
     }
 
+    private boolean isOwner(String role) {
+        return "OWNER".equalsIgnoreCase(role);
+    }
+
     @Override
     public ResponseEntity<?> getAllWallets() {
+        String callerRole = request.getHeader("X-User-Role");
+        if (isOwner(callerRole) || !"ADMIN".equalsIgnoreCase(callerRole)) {
+            return ResponseEntity.status(403).body("Access denied. Only ADMIN can view all wallets.");
+        }
+        
         List<CryptoWalletDto> dtos = new ArrayList<>();
         for (CryptoWalletModel m : repo.findAll()) {
             dtos.add(modelToDto(m));
@@ -34,11 +44,16 @@ public class CryptoWalletServiceImplementation implements CryptoWalletService {
 
     @Override
     public ResponseEntity<?> getWalletsByEmail(String email) {
-    	 String callerRole = request.getHeader("X-User-Role");
-         String callerEmail = request.getHeader("X-User-Email");
-         if ("USER".equalsIgnoreCase(callerRole) && !email.equalsIgnoreCase(callerEmail)) {
-             return ResponseEntity.status(403).body("Not authorized to view another user's wallet!");
-         }
+        String callerRole = request.getHeader("X-User-Role");
+        String callerEmail = request.getHeader("X-User-Email");
+        
+        if (isOwner(callerRole)) {
+            return ResponseEntity.status(403).body("Access denied.");
+        }
+        if ("USER".equalsIgnoreCase(callerRole) && !email.equalsIgnoreCase(callerEmail)) {
+            return ResponseEntity.status(403).body("Not authorized to view another user's wallet!");
+        }
+        
         List<CryptoWalletModel> models = repo.findByEmailIgnoreCase(email);
         if (models.isEmpty()) {
             return ResponseEntity.status(404)
@@ -53,11 +68,16 @@ public class CryptoWalletServiceImplementation implements CryptoWalletService {
 
     @Override
     public ResponseEntity<?> getWalletByEmailAndCurrency(String email, String currencyCode) {
-    	String callerRole = request.getHeader("X-User-Role");
+        String callerRole = request.getHeader("X-User-Role");
         String callerEmail = request.getHeader("X-User-Email");
+        
+        if (isOwner(callerRole)) {
+            return ResponseEntity.status(403).body("Access denied.");
+        }
         if ("USER".equalsIgnoreCase(callerRole) && !email.equalsIgnoreCase(callerEmail)) {
             return ResponseEntity.status(403).body("Not authorized to view another user's wallet!");
         }
+        
         CryptoWalletModel model = repo.findByEmailIgnoreCaseAndCurrencyCodeIgnoreCase(email, currencyCode);
         if (model == null) {
             return ResponseEntity.status(404)
@@ -68,6 +88,11 @@ public class CryptoWalletServiceImplementation implements CryptoWalletService {
 
     @Override
     public ResponseEntity<?> createWallet(CryptoWalletDto body) {
+        String callerRole = request.getHeader("X-User-Role");
+        if (isOwner(callerRole) || callerRole == null) {
+            return ResponseEntity.status(403).body("Access denied.");
+        }
+        
         CryptoWalletModel existing = repo.findByEmailIgnoreCaseAndCurrencyCodeIgnoreCase(
                 body.getEmail(), body.getCurrencyCode());
         if (existing != null) {
@@ -83,6 +108,11 @@ public class CryptoWalletServiceImplementation implements CryptoWalletService {
 
     @Override
     public ResponseEntity<?> updateWallet(CryptoWalletDto body) {
+        String callerRole = request.getHeader("X-User-Role");
+        if (isOwner(callerRole) || !"ADMIN".equalsIgnoreCase(callerRole)) {
+            return ResponseEntity.status(403).body("Access denied. Only ADMIN can update wallets.");
+        }
+        
         CryptoWalletModel existing = repo.findByEmailIgnoreCaseAndCurrencyCodeIgnoreCase(
                 body.getEmail(), body.getCurrencyCode());
         if (existing == null) {
@@ -90,10 +120,9 @@ public class CryptoWalletServiceImplementation implements CryptoWalletService {
                     .body("Wallet with email: " + body.getEmail()
                             + " and currency: " + body.getCurrencyCode() + " not found!");
         }
-        repo.updateAmount(body.getEmail(), body.getCurrencyCode(), body.getAmount());
-        CryptoWalletModel updated = repo.findByEmailIgnoreCaseAndCurrencyCodeIgnoreCase(
-                body.getEmail(), body.getCurrencyCode());
-        return ResponseEntity.ok(modelToDto(updated));
+        existing.setAmount(body.getAmount());
+        repo.save(existing);
+        return ResponseEntity.ok(modelToDto(existing));
     }
 
     @Override
@@ -110,12 +139,9 @@ public class CryptoWalletServiceImplementation implements CryptoWalletService {
                     .body("Insufficient " + existing.getCurrencyCode() + " in crypto wallet! Available: "
                             + existing.getAmount() + ", requested: " + body.getAmount());
         }
-        double newAmount = existing.getAmount() - body.getAmount();
-        repo.updateAmount(body.getEmail(), body.getCurrencyCode(), newAmount);
-
-        CryptoWalletModel updated = repo.findByEmailIgnoreCaseAndCurrencyCodeIgnoreCase(
-                body.getEmail(), body.getCurrencyCode());
-        return ResponseEntity.ok(modelToDto(updated));
+        existing.setAmount(existing.getAmount() - body.getAmount());
+        repo.save(existing);
+        return ResponseEntity.ok(modelToDto(existing));
     }
 
     @Override
@@ -130,16 +156,18 @@ public class CryptoWalletServiceImplementation implements CryptoWalletService {
             return ResponseEntity.ok(modelToDto(newWallet));
         }
 
-        double newAmount = existing.getAmount() + body.getAmount();
-        repo.updateAmount(body.getEmail(), body.getCurrencyCode(), newAmount);
-
-        CryptoWalletModel updated = repo.findByEmailIgnoreCaseAndCurrencyCodeIgnoreCase(
-                body.getEmail(), body.getCurrencyCode());
-        return ResponseEntity.ok(modelToDto(updated));
+        existing.setAmount(existing.getAmount() + body.getAmount());
+        repo.save(existing);
+        return ResponseEntity.ok(modelToDto(existing));
     }
 
     @Override
     public ResponseEntity<?> deleteWallet(String email) {
+        String callerRole = request.getHeader("X-User-Role");
+        if ("USER".equalsIgnoreCase(callerRole)) {
+            return ResponseEntity.status(403).body("Access denied.");
+        }
+        
         List<CryptoWalletModel> existing = repo.findByEmailIgnoreCase(email);
         if (existing.isEmpty()) {
             return ResponseEntity.status(404)

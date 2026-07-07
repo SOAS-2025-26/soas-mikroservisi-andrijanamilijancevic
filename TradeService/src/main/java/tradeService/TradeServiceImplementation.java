@@ -99,6 +99,7 @@ public class TradeServiceImplementation implements TradeService {
         String baseCurrency = from;
         double baseQuantity = quantity;
 
+        // Ako je valuta drugačija od USD/EUR, moramo je prvo konvertovati u USD
         if (!from.equals("USD") && !from.equals("EUR")) {
             try {
                 CurrencyConversionDto converted = mapper.convertValue(
@@ -110,6 +111,7 @@ public class TradeServiceImplementation implements TradeService {
                 return ResponseEntity.status(400).body("Could not convert " + from + " to USD!");
             }
         } else {
+            // Ako je već USD ili EUR, samo proveravamo da li korisnik ima dovoljno sredstava
             BankAccountDto account;
             try {
                 account = mapper.convertValue(
@@ -124,6 +126,7 @@ public class TradeServiceImplementation implements TradeService {
             }
         }
 
+        // Dobijamo kurs iz baseCurrency (USD/EUR) u crypto
         CryptoExchangeDto rate;
         try {
             rate = mapper.convertValue(
@@ -133,12 +136,14 @@ public class TradeServiceImplementation implements TradeService {
             return ResponseEntity.status(400).body("Could not fetch exchange rate!");
         }
 
+        // Ako stopa rasta označava cenu 1 kriptovalute u dolarima (npr. 1 ETH = 3000 USD), onda je crypto = base / rate
         double cryptoAmount = baseQuantity / rate.getRate();
 
-        // ako je konverzija iz nefiat-USD/EUR vec izvrsena, currency-conversion je vec skinuo novac;
-        // ovde skidamo iz baseCurrency samo ako original "from" IS USD/EUR (nije vec skinuto)
-        if (from.equals("USD") || from.equals("EUR")) {
+        // Skidamo USD/EUR sa bankovnog računa (bilo da je u pitanju originalni USD/EUR ili onaj koji smo dobili konverzijom)
+        try {
             bankAccountProxy.debitAccount(new BankAccountDto(email, baseCurrency, baseQuantity));
+        } catch (FeignException e) {
+            return ResponseEntity.status(400).body("Error debiting bank account: " + e.getMessage());
         }
 
         CryptoWalletDto updatedWallet = mapper.convertValue(
@@ -178,11 +183,12 @@ public class TradeServiceImplementation implements TradeService {
 
         double fiatAmount = quantity * rate.getRate();
 
+        // Skidamo kriptovalutu iz novčanika
         cryptoWalletProxy.debitWallet(new CryptoWalletDto(email, from, quantity));
 
         BankAccountDto updatedAccount;
         if (!to.equals("USD") && !to.equals("EUR")) {
-            // prvo kreditujemo USD, pa currency-conversion prebacuje u zeljenu valutu
+            // Prvo dodajemo USD korisniku na račun, pa pokrećemo konverziju u željenu valutu (RSD)
             bankAccountProxy.creditAccount(new BankAccountDto(email, targetFiat, fiatAmount));
             try {
                 CurrencyConversionDto converted = mapper.convertValue(

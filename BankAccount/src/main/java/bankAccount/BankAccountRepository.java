@@ -19,9 +19,4 @@ public interface BankAccountRepository extends JpaRepository<BankAccountModel, I
     @Transactional
     @Query("delete from BankAccountModel b where lower(b.email) = lower(?1)")
     void deleteByEmail(String email);
-
-    @Modifying
-    @Transactional
-    @Query("update BankAccountModel b set b.amount=?3 where lower(b.email)=lower(?1) and lower(b.currencyCode)=lower(?2)")
-    void updateAmount(String email, String currencyCode, double amount);
 }

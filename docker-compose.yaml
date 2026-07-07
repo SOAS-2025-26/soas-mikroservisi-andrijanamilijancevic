@@ -1,0 +1,110 @@
+version: '3.8'
+
+networks:
+  soas-network:
+    driver: bridge
+
+services:
+  naming-server:
+    build: ./NamingServer
+    ports:
+      - "8761:8761"
+    networks:
+      - "soas-network"
+    environment:
+      - EUREKA_CLIENT_REGISTER_WITH_EUREKA=false
+      - EUREKA_CLIENT_FETCH_REGISTRY=false
+
+  users-service:
+    build: ./UsersService
+    ports:
+      - "8770:8770"
+    networks:
+      - "soas-network"
+    depends_on:
+      - naming-server
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://naming-server:8761/eureka/
+      - SPRING_DATASOURCE_URL=jdbc:h2:mem:usersdb
+      - BANK_ACCOUNT_SERVICE_URL=http://bank-account:8200
+      - CRYPTO_WALLET_SERVICE_URL=http://crypto-wallet:8300
+
+  currency-exchange:
+    build: ./CurrencyExchange
+    ports:
+      - "8000:8000"
+    networks:
+      - "soas-network"
+    depends_on:
+      - naming-server
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://naming-server:8761/eureka/
+
+  currency-conversion:
+    build: ./CurrencyConversion
+    ports:
+      - "8100:8100"
+    networks:
+      - "soas-network"
+    depends_on:
+      - naming-server
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://naming-server:8761/eureka/
+
+  bank-account:
+    build: ./BankAccount
+    ports:
+      - "8200:8200"
+    networks:
+      - "soas-network"
+    depends_on:
+      - naming-server
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://naming-server:8761/eureka/
+      - SPRING_DATASOURCE_URL=jdbc:h2:mem:bankdb
+
+  crypto-wallet:
+    build: ./CryptoWallet
+    ports:
+      - "8300:8300"
+    networks:
+      - "soas-network"
+    depends_on:
+      - naming-server
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://naming-server:8761/eureka/
+      - SPRING_DATASOURCE_URL=jdbc:h2:mem:cryptodb
+
+  crypto-exchange:
+    build: ./CryptoExchange
+    ports:
+      - "8400:8400"
+    networks:
+      - "soas-network"
+    depends_on:
+      - naming-server
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://naming-server:8761/eureka/
+
+  trade-service:
+    build: ./TradeService
+    ports:
+      - "8600:8600"
+    networks:
+      - "soas-network"
+    depends_on:
+      - naming-server
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://naming-server:8761/eureka/
+
+  api-gateway:
+    build: ./ApiGateway
+    ports:
+      - "8765:8765"
+    networks:
+      - "soas-network"
+    depends_on:
+      - naming-server
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://naming-server:8761/eureka/
+      - USERS_SERVICE_URL=http://users-service:8770

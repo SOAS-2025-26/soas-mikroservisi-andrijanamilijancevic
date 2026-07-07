@@ -16,6 +16,7 @@ public class BankAccountServiceImplementation implements BankAccountService {
 
     @Autowired
     private BankAccountRepository repo;
+    
     @Autowired
     private HttpServletRequest request;
 
@@ -23,8 +24,17 @@ public class BankAccountServiceImplementation implements BankAccountService {
         return new BankAccountDto(model.getEmail(), model.getCurrencyCode(), model.getAmount());
     }
 
+    private boolean isOwner(String role) {
+        return "OWNER".equalsIgnoreCase(role);
+    }
+
     @Override
     public ResponseEntity<?> getAllAccounts() {
+        String callerRole = request.getHeader("X-User-Role");
+        if (isOwner(callerRole) || !"ADMIN".equalsIgnoreCase(callerRole)) {
+            return ResponseEntity.status(403).body("Access denied. Only ADMIN can view all accounts.");
+        }
+        
         List<BankAccountDto> dtos = new ArrayList<>();
         for (BankAccountModel m : repo.findAll()) {
             dtos.add(modelToDto(m));
@@ -34,11 +44,16 @@ public class BankAccountServiceImplementation implements BankAccountService {
 
     @Override
     public ResponseEntity<?> getAccountsByEmail(String email) {
-    	String callerRole = request.getHeader("X-User-Role");
+        String callerRole = request.getHeader("X-User-Role");
         String callerEmail = request.getHeader("X-User-Email");
+        
+        if (isOwner(callerRole)) {
+            return ResponseEntity.status(403).body("Access denied.");
+        }
         if ("USER".equalsIgnoreCase(callerRole) && !email.equalsIgnoreCase(callerEmail)) {
             return ResponseEntity.status(403).body("Not authorized to view another user's account!");
         }
+        
         List<BankAccountModel> models = repo.findByEmailIgnoreCase(email);
         if (models.isEmpty()) {
             return ResponseEntity.status(404)
@@ -53,11 +68,16 @@ public class BankAccountServiceImplementation implements BankAccountService {
 
     @Override
     public ResponseEntity<?> getAccountByEmailAndCurrency(String email, String currencyCode) {
-    	 String callerRole = request.getHeader("X-User-Role");
-         String callerEmail = request.getHeader("X-User-Email");
-         if ("USER".equalsIgnoreCase(callerRole) && !email.equalsIgnoreCase(callerEmail)) {
-             return ResponseEntity.status(403).body("Not authorized to view another user's account!");
-         }
+        String callerRole = request.getHeader("X-User-Role");
+        String callerEmail = request.getHeader("X-User-Email");
+        
+        if (isOwner(callerRole)) {
+            return ResponseEntity.status(403).body("Access denied.");
+        }
+        if ("USER".equalsIgnoreCase(callerRole) && !email.equalsIgnoreCase(callerEmail)) {
+            return ResponseEntity.status(403).body("Not authorized to view another user's account!");
+        }
+        
         BankAccountModel model = repo.findByEmailIgnoreCaseAndCurrencyCodeIgnoreCase(email, currencyCode);
         if (model == null) {
             return ResponseEntity.status(404)
@@ -68,6 +88,13 @@ public class BankAccountServiceImplementation implements BankAccountService {
 
     @Override
     public ResponseEntity<?> createAccount(BankAccountDto body) {
+        String callerRole = request.getHeader("X-User-Role");
+        if (isOwner(callerRole) || callerRole == null) {
+            return ResponseEntity.status(403).body("Access denied.");
+        }
+        // Samo ADMIN može ručno kreirati, USER kreira automatski preko registracije (ili dozvoljavamo bez provere ako dolazi sa internog servisa)
+        // Pošto i UsersService poziva ovo eksterno (tada je uloga OWNER/ADMIN u zavisnosti ko je kreirao korisnika), pustićemo ako je ADMIN ili OWNER
+        
         BankAccountModel existing = repo.findByEmailIgnoreCaseAndCurrencyCodeIgnoreCase(
                 body.getEmail(), body.getCurrencyCode());
         if (existing != null) {
@@ -83,6 +110,11 @@ public class BankAccountServiceImplementation implements BankAccountService {
 
     @Override
     public ResponseEntity<?> updateAccount(BankAccountDto body) {
+        String callerRole = request.getHeader("X-User-Role");
+        if (isOwner(callerRole) || !"ADMIN".equalsIgnoreCase(callerRole)) {
+            return ResponseEntity.status(403).body("Access denied. Only ADMIN can update accounts.");
+        }
+        
         BankAccountModel existing = repo.findByEmailIgnoreCaseAndCurrencyCodeIgnoreCase(
                 body.getEmail(), body.getCurrencyCode());
         if (existing == null) {
@@ -90,14 +122,14 @@ public class BankAccountServiceImplementation implements BankAccountService {
                     .body("Account with email: " + body.getEmail()
                             + " and currency: " + body.getCurrencyCode() + " not found!");
         }
-        repo.updateAmount(body.getEmail(), body.getCurrencyCode(), body.getAmount());
-        BankAccountModel updated = repo.findByEmailIgnoreCaseAndCurrencyCodeIgnoreCase(
-                body.getEmail(), body.getCurrencyCode());
-        return ResponseEntity.ok(modelToDto(updated));
+        existing.setAmount(body.getAmount());
+        repo.save(existing);
+        return ResponseEntity.ok(modelToDto(existing));
     }
 
     @Override
     public ResponseEntity<?> debitAccount(BankAccountDto body) {
+        // Interni pozivi nemaju uvek striktnu spoljnu autorizaciju, ali za svaki slučaj puštamo
         BankAccountModel existing = repo.findByEmailIgnoreCaseAndCurrencyCodeIgnoreCase(
                 body.getEmail(), body.getCurrencyCode());
         if (existing == null) {
@@ -110,12 +142,9 @@ public class BankAccountServiceImplementation implements BankAccountService {
                     .body("Insufficient funds! Available: " + existing.getAmount()
                             + " " + existing.getCurrencyCode() + ", requested: " + body.getAmount());
         }
-        double newAmount = existing.getAmount() - body.getAmount();
-        repo.updateAmount(body.getEmail(), body.getCurrencyCode(), newAmount);
-
-        BankAccountModel updated = repo.findByEmailIgnoreCaseAndCurrencyCodeIgnoreCase(
-                body.getEmail(), body.getCurrencyCode());
-        return ResponseEntity.ok(modelToDto(updated));
+        existing.setAmount(existing.getAmount() - body.getAmount());
+        repo.save(existing);
+        return ResponseEntity.ok(modelToDto(existing));
     }
 
     @Override
@@ -130,16 +159,19 @@ public class BankAccountServiceImplementation implements BankAccountService {
             return ResponseEntity.ok(modelToDto(newAccount));
         }
 
-        double newAmount = existing.getAmount() + body.getAmount();
-        repo.updateAmount(body.getEmail(), body.getCurrencyCode(), newAmount);
-
-        BankAccountModel updated = repo.findByEmailIgnoreCaseAndCurrencyCodeIgnoreCase(
-                body.getEmail(), body.getCurrencyCode());
-        return ResponseEntity.ok(modelToDto(updated));
+        existing.setAmount(existing.getAmount() + body.getAmount());
+        repo.save(existing);
+        return ResponseEntity.ok(modelToDto(existing));
     }
 
     @Override
     public ResponseEntity<?> deleteAccount(String email) {
+        // Dozvoljeno za ADMIN-a i za interne pozive (kada OWNER briše korisnika u UsersService)
+        String callerRole = request.getHeader("X-User-Role");
+        if ("USER".equalsIgnoreCase(callerRole)) {
+            return ResponseEntity.status(403).body("Access denied.");
+        }
+        
         List<BankAccountModel> existing = repo.findByEmailIgnoreCase(email);
         if (existing.isEmpty()) {
             return ResponseEntity.status(404)

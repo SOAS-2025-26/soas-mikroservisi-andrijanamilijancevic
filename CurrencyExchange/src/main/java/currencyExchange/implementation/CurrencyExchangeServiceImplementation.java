@@ -16,6 +16,17 @@ public class CurrencyExchangeServiceImplementation implements CurrencyExchangeSe
 
     @Override
     public ResponseEntity<?> getExchange(String from, String to) {
+        if (from == null || to == null) {
+            return ResponseEntity.status(400).body("Currencies must not be null");
+        }
+
+        // Ako su valute iste, kurs je 1.0 i nema potrebe pozivati API
+        if (from.equalsIgnoreCase(to)) {
+            CurrencyExchangeDto selfResponse = new CurrencyExchangeDto(
+                    from.toUpperCase(), to.toUpperCase(), from.toUpperCase() + " currency", 1.0);
+            return ResponseEntity.ok(selfResponse);
+        }
+
         String apiUrl = String.format("https://www.floatrates.com/daily/%s.json", from.toLowerCase());
 
         try {

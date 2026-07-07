@@ -7,8 +7,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import jakarta.servlet.http.HttpServletRequest;
 import serviceLibrary.dto.bankAccount.BankAccountDto;
 import serviceLibrary.dto.cryptoWallet.CryptoWalletDto;
@@ -32,15 +30,17 @@ public class UsersServiceImplementation implements UsersService {
     @Autowired
     private HttpServletRequest request;
 
-  
-    private final ObjectMapper mapper = new ObjectMapper();
-
     public UserDto modelToDto(UserModel model) {
         return new UserDto(model.getEmail(), model.getPassword(), model.getRole());
     }
 
     @Override
     public ResponseEntity<?> getAllUsers() {
+        String callerRole = request.getHeader("X-User-Role");
+        if (callerRole == null || (!"OWNER".equalsIgnoreCase(callerRole) && !"ADMIN".equalsIgnoreCase(callerRole))) {
+            return ResponseEntity.status(403).body("Access denied. Only OWNER or ADMIN can view all users.");
+        }
+
         List<UserModel> models = repo.findAll();
         List<UserDto> dtos = new ArrayList<>();
         for (UserModel m : models) {
@@ -51,6 +51,11 @@ public class UsersServiceImplementation implements UsersService {
 
     @Override
     public ResponseEntity<?> getUserByEmail(String email) {
+        String callerRole = request.getHeader("X-User-Role");
+        if (callerRole == null || (!"OWNER".equalsIgnoreCase(callerRole) && !"ADMIN".equalsIgnoreCase(callerRole))) {
+            return ResponseEntity.status(403).body("Access denied. Only OWNER or ADMIN can view user by email.");
+        }
+
         UserModel model = repo.findByEmailIgnoreCase(email);
         if (model != null) {
             return ResponseEntity.ok(modelToDto(model));
@@ -61,7 +66,10 @@ public class UsersServiceImplementation implements UsersService {
 
     @Override
     public ResponseEntity<?> createUser(UserDto body) {
-    	String callerRole = request.getHeader("X-User-Role");
+        String callerRole = request.getHeader("X-User-Role");
+        if (callerRole == null || (!"OWNER".equalsIgnoreCase(callerRole) && !"ADMIN".equalsIgnoreCase(callerRole))) {
+            return ResponseEntity.status(403).body("Access denied.");
+        }
         if ("ADMIN".equalsIgnoreCase(callerRole) && !"USER".equalsIgnoreCase(body.getRole())) {
             return ResponseEntity.status(403)
                     .body("Admin can only create users with role USER!");
@@ -79,7 +87,6 @@ public class UsersServiceImplementation implements UsersService {
                         .body("Owner already exists in the system!");
             }
         }
-        
 
         UserModel newUser = new UserModel(
                 body.getEmail(),
@@ -99,25 +106,35 @@ public class UsersServiceImplementation implements UsersService {
 
     @Override
     public ResponseEntity<?> updateUser(UserDto body) {
-    	UserModel existing = repo.findByEmailIgnoreCase(body.getEmail());
+        UserModel existing = repo.findByEmailIgnoreCase(body.getEmail());
         if (existing == null) {
             return ResponseEntity.status(404)
                     .body("User with email: " + body.getEmail() + " not found!");
         }
         String callerRole = request.getHeader("X-User-Role");
+        if (callerRole == null || (!"OWNER".equalsIgnoreCase(callerRole) && !"ADMIN".equalsIgnoreCase(callerRole))) {
+            return ResponseEntity.status(403).body("Access denied.");
+        }
         if ("ADMIN".equalsIgnoreCase(callerRole)
                 && (!"USER".equalsIgnoreCase(existing.getRole()) || !"USER".equalsIgnoreCase(body.getRole()))) {
             return ResponseEntity.status(403)
                     .body("Admin can only update users with role USER, and cannot change their role!");
         }
-        repo.updateUser(body.getEmail(),
-        		body.getPassword(),
-        		body.getRole().toUpperCase());
-        return ResponseEntity.ok(modelToDto(repo.findByEmailIgnoreCase(body.getEmail())));
+
+        existing.setPassword(body.getPassword());
+        existing.setRole(body.getRole().toUpperCase());
+        repo.save(existing);
+
+        return ResponseEntity.ok(modelToDto(existing));
     }
 
     @Override
     public ResponseEntity<?> deleteUser(String email) {
+        String callerRole = request.getHeader("X-User-Role");
+        if (callerRole == null || !"OWNER".equalsIgnoreCase(callerRole)) {
+            return ResponseEntity.status(403).body("Access denied. Only OWNER can delete users.");
+        }
+
         UserModel existing = repo.findByEmailIgnoreCase(email);
         if (existing == null) {
             return ResponseEntity.status(404)
@@ -132,6 +149,7 @@ public class UsersServiceImplementation implements UsersService {
         repo.delete(existing);
         return ResponseEntity.ok("User with email: " + email + " successfully deleted!");
     }
+
     @Override
     public ResponseEntity<?> loginUser(String email, String password) {
         UserModel model = repo.findByEmailIgnoreCase(email);

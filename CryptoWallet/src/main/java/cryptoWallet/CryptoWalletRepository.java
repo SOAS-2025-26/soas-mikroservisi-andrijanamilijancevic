@@ -19,9 +19,4 @@ public interface CryptoWalletRepository extends JpaRepository<CryptoWalletModel,
     @Transactional
     @Query("delete from CryptoWalletModel c where lower(c.email) = lower(?1)")
     void deleteByEmail(String email);
-
-    @Modifying
-    @Transactional
-    @Query("update CryptoWalletModel c set c.amount=?3 where lower(c.email)=lower(?1) and lower(c.currencyCode)=lower(?2)")
-    void updateAmount(String email, String currencyCode, double amount);
 }

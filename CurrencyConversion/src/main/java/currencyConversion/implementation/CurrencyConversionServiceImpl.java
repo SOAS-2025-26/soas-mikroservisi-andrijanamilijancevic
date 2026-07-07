@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import feign.FeignException;
+import jakarta.servlet.http.HttpServletRequest;
 import serviceLibrary.dto.bankAccount.BankAccountDto;
 import serviceLibrary.dto.currencyConversion.CurrencyConversionDto;
 import serviceLibrary.dto.currencyExchange.CurrencyExchangeDto;
@@ -23,11 +24,21 @@ public class CurrencyConversionServiceImpl implements CurrencyConversionService 
 
     @Autowired
     private BankAccountProxy bankAccountProxy;
+    
+    @Autowired
+    private HttpServletRequest request;
 
     private final ObjectMapper mapper = new ObjectMapper();
 
     @Override
     public ResponseEntity<?> currencyConversion(String from, String to, double quantity, String email) {
+        // Ako email nije prosleđen kroz parametar, uzmi ga iz X-User-Email zaglavlja
+        String activeEmail = (email != null && !email.trim().isEmpty()) ? email : request.getHeader("X-User-Email");
+        
+        if (activeEmail == null) {
+            return ResponseEntity.status(400).body("User email is missing in the request context!");
+        }
+
         CurrencyExchangeDto response;
         try {
             response = proxy.getExchangeFeign(from, to).getBody();
@@ -38,7 +49,7 @@ public class CurrencyConversionServiceImpl implements CurrencyConversionService 
         BankAccountDto sourceAccount;
         try {
             sourceAccount = mapper.convertValue(
-                    bankAccountProxy.getAccountByEmailAndCurrency(email, from).getBody(),
+                    bankAccountProxy.getAccountByEmailAndCurrency(activeEmail, from).getBody(),
                     BankAccountDto.class);
         } catch (FeignException.NotFound e) {
             return ResponseEntity.status(404)
@@ -54,11 +65,11 @@ public class CurrencyConversionServiceImpl implements CurrencyConversionService 
         double exchangedAmount = quantity * response.getRate();
 
         // umanji izvornu valutu
-        bankAccountProxy.debitAccount(new BankAccountDto(email, from, quantity));
+        bankAccountProxy.debitAccount(new BankAccountDto(activeEmail, from, quantity));
 
         // uvecaj (ili prvi put kreiraj) ciljnu valutu
         BankAccountDto updatedTarget = mapper.convertValue(
-                bankAccountProxy.creditAccount(new BankAccountDto(email, to, exchangedAmount)).getBody(),
+                bankAccountProxy.creditAccount(new BankAccountDto(activeEmail, to, exchangedAmount)).getBody(),
                 BankAccountDto.class);
 
         String message = String.format("Uspešno je izvršena razmena %s: %.2f za %s: %.2f",
