@@ -22,32 +22,45 @@ public class BankAccountServiceImplementation implements BankAccountService {
 
     @Override
     public ResponseEntity<?> getAllAccounts() {
-        List<BankAccountModel> models = repo.findAll();
         List<BankAccountDto> dtos = new ArrayList<>();
-        if (!models.isEmpty()) {
-            for (BankAccountModel m : models) {
-                dtos.add(modelToDto(m));
-            }
-            return ResponseEntity.ok(dtos);
+        for (BankAccountModel m : repo.findAll()) {
+            dtos.add(modelToDto(m));
         }
         return ResponseEntity.ok(dtos);
-        }
+    }
 
     @Override
-    public ResponseEntity<?> getAccountByEmail(String email) {
-        BankAccountModel model = repo.findByEmailIgnoreCase(email);
-        if (model != null) {
-            return ResponseEntity.ok(modelToDto(model));
+    public ResponseEntity<?> getAccountsByEmail(String email) {
+        List<BankAccountModel> models = repo.findByEmailIgnoreCase(email);
+        if (models.isEmpty()) {
+            return ResponseEntity.status(404)
+                    .body("No bank accounts found for email: " + email);
         }
-        return ResponseEntity.status(404)
-                .body("Bank account with email: " + email + " not found!");
+        List<BankAccountDto> dtos = new ArrayList<>();
+        for (BankAccountModel m : models) {
+            dtos.add(modelToDto(m));
+        }
+        return ResponseEntity.ok(dtos);
+    }
+
+    @Override
+    public ResponseEntity<?> getAccountByEmailAndCurrency(String email, String currencyCode) {
+        BankAccountModel model = repo.findByEmailIgnoreCaseAndCurrencyCodeIgnoreCase(email, currencyCode);
+        if (model == null) {
+            return ResponseEntity.status(404)
+                    .body("Account with email: " + email + " and currency: " + currencyCode + " not found!");
+        }
+        return ResponseEntity.ok(modelToDto(model));
     }
 
     @Override
     public ResponseEntity<?> createAccount(BankAccountDto body) {
-        if (repo.findByEmailIgnoreCase(body.getEmail()) != null) {
+        BankAccountModel existing = repo.findByEmailIgnoreCaseAndCurrencyCodeIgnoreCase(
+                body.getEmail(), body.getCurrencyCode());
+        if (existing != null) {
             return ResponseEntity.status(409)
-                    .body("Bank account with email: " + body.getEmail() + " already exists!");
+                    .body("Bank account with email: " + body.getEmail()
+                            + " and currency: " + body.getCurrencyCode() + " already exists!");
         }
         BankAccountModel newAccount = new BankAccountModel(
                 body.getEmail(), body.getCurrencyCode(), body.getAmount());
@@ -57,23 +70,69 @@ public class BankAccountServiceImplementation implements BankAccountService {
 
     @Override
     public ResponseEntity<?> updateAccount(BankAccountDto body) {
-        BankAccountModel existing = repo.findByEmailIgnoreCase(body.getEmail());
+        BankAccountModel existing = repo.findByEmailIgnoreCaseAndCurrencyCodeIgnoreCase(
+                body.getEmail(), body.getCurrencyCode());
         if (existing == null) {
             return ResponseEntity.status(404)
-                    .body("Bank account with email: " + body.getEmail() + " not found!");
+                    .body("Account with email: " + body.getEmail()
+                            + " and currency: " + body.getCurrencyCode() + " not found!");
         }
-        repo.updateAccount(body.getEmail(), body.getCurrencyCode(), body.getAmount());
-        return ResponseEntity.ok(modelToDto(repo.findByEmailIgnoreCase(body.getEmail())));
+        repo.updateAmount(body.getEmail(), body.getCurrencyCode(), body.getAmount());
+        BankAccountModel updated = repo.findByEmailIgnoreCaseAndCurrencyCodeIgnoreCase(
+                body.getEmail(), body.getCurrencyCode());
+        return ResponseEntity.ok(modelToDto(updated));
+    }
+
+    @Override
+    public ResponseEntity<?> debitAccount(BankAccountDto body) {
+        BankAccountModel existing = repo.findByEmailIgnoreCaseAndCurrencyCodeIgnoreCase(
+                body.getEmail(), body.getCurrencyCode());
+        if (existing == null) {
+            return ResponseEntity.status(404)
+                    .body("Account with email: " + body.getEmail()
+                            + " and currency: " + body.getCurrencyCode() + " not found!");
+        }
+        if (existing.getAmount() < body.getAmount()) {
+            return ResponseEntity.status(400)
+                    .body("Insufficient funds! Available: " + existing.getAmount()
+                            + " " + existing.getCurrencyCode() + ", requested: " + body.getAmount());
+        }
+        double newAmount = existing.getAmount() - body.getAmount();
+        repo.updateAmount(body.getEmail(), body.getCurrencyCode(), newAmount);
+
+        BankAccountModel updated = repo.findByEmailIgnoreCaseAndCurrencyCodeIgnoreCase(
+                body.getEmail(), body.getCurrencyCode());
+        return ResponseEntity.ok(modelToDto(updated));
+    }
+
+    @Override
+    public ResponseEntity<?> creditAccount(BankAccountDto body) {
+        BankAccountModel existing = repo.findByEmailIgnoreCaseAndCurrencyCodeIgnoreCase(
+                body.getEmail(), body.getCurrencyCode());
+
+        if (existing == null) {
+            BankAccountModel newAccount = new BankAccountModel(
+                    body.getEmail(), body.getCurrencyCode(), body.getAmount());
+            repo.save(newAccount);
+            return ResponseEntity.ok(modelToDto(newAccount));
+        }
+
+        double newAmount = existing.getAmount() + body.getAmount();
+        repo.updateAmount(body.getEmail(), body.getCurrencyCode(), newAmount);
+
+        BankAccountModel updated = repo.findByEmailIgnoreCaseAndCurrencyCodeIgnoreCase(
+                body.getEmail(), body.getCurrencyCode());
+        return ResponseEntity.ok(modelToDto(updated));
     }
 
     @Override
     public ResponseEntity<?> deleteAccount(String email) {
-        BankAccountModel existing = repo.findByEmailIgnoreCase(email);
-        if (existing == null) {
+        List<BankAccountModel> existing = repo.findByEmailIgnoreCase(email);
+        if (existing.isEmpty()) {
             return ResponseEntity.status(404)
-                    .body("Bank account with email: " + email + " not found!");
+                    .body("No bank accounts found for email: " + email);
         }
         repo.deleteByEmail(email);
-        return ResponseEntity.ok("Bank account with email: " + email + " successfully deleted!");
+        return ResponseEntity.ok("All bank accounts for email: " + email + " successfully deleted!");
     }
 }

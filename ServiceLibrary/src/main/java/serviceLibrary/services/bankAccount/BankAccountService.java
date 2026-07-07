@@ -17,14 +17,29 @@ public interface BankAccountService {
     @GetMapping("/bank-account")
     ResponseEntity<?> getAllAccounts();
 
+    // Sve valute jednog korisnika
     @GetMapping("/bank-account/email")
-    ResponseEntity<?> getAccountByEmail(@RequestParam String email);
+    ResponseEntity<?> getAccountsByEmail(@RequestParam String email);
+
+    // Tacno jedna valuta jednog korisnika
+    @GetMapping("/bank-account/email-currency")
+    ResponseEntity<?> getAccountByEmailAndCurrency(@RequestParam String email,
+                                                    @RequestParam String currencyCode);
 
     @PostMapping("/bank-account")
     ResponseEntity<?> createAccount(@RequestBody BankAccountDto body);
 
+    // Admin - eksplicitno postavljanje apsolutnog iznosa
     @PutMapping("/bank-account")
     ResponseEntity<?> updateAccount(@RequestBody BankAccountDto body);
+
+    // Interno (currency-conversion, trade-service) - umanjuje postojecu valutu
+    @PutMapping("/bank-account/debit")
+    ResponseEntity<?> debitAccount(@RequestBody BankAccountDto body);
+
+    // Interno (currency-conversion, trade-service) - uvecava ili kreira valutu
+    @PutMapping("/bank-account/credit")
+    ResponseEntity<?> creditAccount(@RequestBody BankAccountDto body);
 
     @DeleteMapping("/bank-account")
     ResponseEntity<?> deleteAccount(@RequestParam String email);

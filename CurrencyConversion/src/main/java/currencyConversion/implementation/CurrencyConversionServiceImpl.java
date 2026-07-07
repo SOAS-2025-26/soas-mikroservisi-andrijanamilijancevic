@@ -28,52 +28,44 @@ public class CurrencyConversionServiceImpl implements CurrencyConversionService 
 
     @Override
     public ResponseEntity<?> currencyConversion(String from, String to, double quantity, String email) {
-        // dohvati kurs
-        CurrencyExchangeDto response = null;
+        CurrencyExchangeDto response;
         try {
             response = proxy.getExchangeFeign(from, to).getBody();
         } catch (FeignException e) {
             throw new InvalidCurrencyException("You've entered invalid currency pair");
         }
 
-        // dohvati bankovni racun korisnika
-        BankAccountDto account;
+        BankAccountDto sourceAccount;
         try {
-            account = mapper.convertValue(
-                    bankAccountProxy.getAccountByEmail(email).getBody(), BankAccountDto.class);
+            sourceAccount = mapper.convertValue(
+                    bankAccountProxy.getAccountByEmailAndCurrency(email, from).getBody(),
+                    BankAccountDto.class);
         } catch (FeignException.NotFound e) {
             return ResponseEntity.status(404)
-                    .body("Bank account with email: " + email + " not found!");
+                    .body("You don't have a " + from.toUpperCase() + " balance to convert from!");
         }
 
-        // proveri da li ima dovoljno sredstava
-        if (!account.getCurrencyCode().equalsIgnoreCase(from)) {
+        if (sourceAccount.getAmount() < quantity) {
             return ResponseEntity.status(400)
-                    .body("Account currency is " + account.getCurrencyCode() 
-                    + " but requested conversion from " + from);
-        }
-
-        if (account.getAmount() < quantity) {
-            return ResponseEntity.status(400)
-                    .body("Insufficient funds! Available: " + account.getAmount() 
-                    + " " + from + ", requested: " + quantity);
+                    .body("Insufficient funds! Available: " + sourceAccount.getAmount()
+                            + " " + from + ", requested: " + quantity);
         }
 
         double exchangedAmount = quantity * response.getRate();
 
-        // umanji sredstva sa racuna
-        bankAccountProxy.updateAccount(
-                new BankAccountDto(email, from, account.getAmount() - quantity));
+        // umanji izvornu valutu
+        bankAccountProxy.debitAccount(new BankAccountDto(email, from, quantity));
 
-        // dohvati azurirani racun
-        BankAccountDto updatedAccount = mapper.convertValue(
-                bankAccountProxy.getAccountByEmail(email).getBody(), BankAccountDto.class);
+        // uvecaj (ili prvi put kreiraj) ciljnu valutu
+        BankAccountDto updatedTarget = mapper.convertValue(
+                bankAccountProxy.creditAccount(new BankAccountDto(email, to, exchangedAmount)).getBody(),
+                BankAccountDto.class);
 
         String message = String.format("Uspešno je izvršena razmena %s: %.2f za %s: %.2f",
                 from.toUpperCase(), quantity, to.toUpperCase(), exchangedAmount);
 
         CurrencyConversionDto finalResponse = new CurrencyConversionDto(
-                response, quantity, exchangedAmount, message);
+                response, quantity, exchangedAmount, message, updatedTarget);
 
         return ResponseEntity.ok(finalResponse);
     }

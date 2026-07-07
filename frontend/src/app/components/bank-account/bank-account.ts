@@ -12,8 +12,8 @@ import { AuthService } from '../../services/auth';
 })
 export class BankAccountComponent implements OnInit {
 
-  accounts: any[] = [];
-  account: any = null;
+  accounts: any[] = [];      // ADMIN: svi racuni svih korisnika
+  myAccounts: any[] = [];    // USER: sve valute mog racuna
   errorMessage: string = '';
   successMessage: string = '';
 
@@ -35,9 +35,12 @@ export class BankAccountComponent implements OnInit {
         error: () => this.errorMessage = 'Greška pri učitavanju računa!'
       });
     } else if (this.auth.isUser()) {
-      this.api.getAccountByEmail(this.auth.getEmail()).subscribe({
-        next: (data) => this.account = data,
-        error: () => this.errorMessage = 'Račun nije pronađen!'
+      this.api.getAccountsByEmail(this.auth.getEmail()).subscribe({
+        next: (data: any) => this.myAccounts = data,
+        error: () => {
+          this.myAccounts = [];
+          this.errorMessage = 'Nemate nijedan bankovni račun!';
+        }
       });
     }
   }
@@ -48,7 +51,7 @@ export class BankAccountComponent implements OnInit {
         this.successMessage = 'Račun uspešno kreiran!';
         this.loadData();
       },
-      error: (err) => this.errorMessage = err.error || 'Greška!'
+      error: (err) => this.errorMessage = err.error?.message || err.error || 'Greška!'
     });
   }
 
@@ -58,7 +61,7 @@ export class BankAccountComponent implements OnInit {
         this.successMessage = 'Račun uspešno ažuriran!';
         this.loadData();
       },
-      error: (err) => this.errorMessage = err.error || 'Greška!'
+      error: (err) => this.errorMessage = err.error?.message || err.error || 'Greška!'
     });
   }
 
@@ -68,7 +71,7 @@ export class BankAccountComponent implements OnInit {
         this.successMessage = 'Račun uspešno obrisan!';
         this.loadData();
       },
-      error: (err) => this.errorMessage = err.error || 'Greška!'
+      error: (err) => this.errorMessage = err.error?.message || err.error || 'Greška!'
     });
   }
 }

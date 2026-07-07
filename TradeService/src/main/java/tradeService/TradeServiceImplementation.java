@@ -61,15 +61,15 @@ public class TradeServiceImplementation implements TradeService {
 
     // CRYPTO -> CRYPTO
     private ResponseEntity<?> cryptoToCrypto(String from, String to, double quantity, String email) {
-        CryptoWalletDto wallet;
+        CryptoWalletDto sourceWallet;
         try {
-            wallet = mapper.convertValue(
-                    cryptoWalletProxy.getWalletByEmail(email).getBody(), CryptoWalletDto.class);
+            sourceWallet = mapper.convertValue(
+                    cryptoWalletProxy.getWalletByEmailAndCurrency(email, from).getBody(), CryptoWalletDto.class);
         } catch (FeignException.NotFound e) {
-            return ResponseEntity.status(404).body("Crypto wallet not found!");
+            return ResponseEntity.status(404).body("You don't have a " + from + " wallet balance!");
         }
 
-        if (!wallet.getCurrencyCode().equalsIgnoreCase(from) || wallet.getAmount() < quantity) {
+        if (sourceWallet.getAmount() < quantity) {
             return ResponseEntity.status(400)
                     .body("Insufficient " + from + " in crypto wallet!");
         }
@@ -83,25 +83,19 @@ public class TradeServiceImplementation implements TradeService {
         }
 
         double toAmount = quantity * rate.getRate();
-        cryptoWalletProxy.updateWallet(
-                new CryptoWalletDto(wallet.getEmail(), to, wallet.getAmount() - quantity + toAmount));
+
+        cryptoWalletProxy.debitWallet(new CryptoWalletDto(email, from, quantity));
+        CryptoWalletDto updatedTarget = mapper.convertValue(
+                cryptoWalletProxy.creditWallet(new CryptoWalletDto(email, to, toAmount)).getBody(),
+                CryptoWalletDto.class);
 
         String message = "Successfully exchanged " + from + ": " + quantity
                 + " for " + to + ": " + toAmount;
-        return ResponseEntity.ok(new TradeResponseDto(message,
-                new CryptoWalletDto(wallet.getEmail(), to, toAmount)));
+        return ResponseEntity.ok(new TradeResponseDto(message, updatedTarget));
     }
 
     // FIAT -> CRYPTO
     private ResponseEntity<?> fiatToCrypto(String from, String to, double quantity, String email) {
-        BankAccountDto account;
-        try {
-            account = mapper.convertValue(
-                    bankAccountProxy.getAccountByEmail(email).getBody(), BankAccountDto.class);
-        } catch (FeignException.NotFound e) {
-            return ResponseEntity.status(404).body("Bank account not found!");
-        }
-
         String baseCurrency = from;
         double baseQuantity = quantity;
 
@@ -115,12 +109,19 @@ public class TradeServiceImplementation implements TradeService {
             } catch (FeignException e) {
                 return ResponseEntity.status(400).body("Could not convert " + from + " to USD!");
             }
-        }
-
-        if (!account.getCurrencyCode().equalsIgnoreCase(baseCurrency)
-                || account.getAmount() < baseQuantity) {
-            return ResponseEntity.status(400)
-                    .body("Insufficient " + baseCurrency + " in bank account!");
+        } else {
+            BankAccountDto account;
+            try {
+                account = mapper.convertValue(
+                        bankAccountProxy.getAccountByEmailAndCurrency(email, baseCurrency).getBody(),
+                        BankAccountDto.class);
+            } catch (FeignException.NotFound e) {
+                return ResponseEntity.status(404).body("You don't have a " + baseCurrency + " balance!");
+            }
+            if (account.getAmount() < baseQuantity) {
+                return ResponseEntity.status(400)
+                        .body("Insufficient " + baseCurrency + " in bank account!");
+            }
         }
 
         CryptoExchangeDto rate;
@@ -134,26 +135,19 @@ public class TradeServiceImplementation implements TradeService {
 
         double cryptoAmount = baseQuantity / rate.getRate();
 
-        bankAccountProxy.updateAccount(
-                new BankAccountDto(account.getEmail(), baseCurrency,
-                        account.getAmount() - baseQuantity));
-
-        CryptoWalletDto wallet;
-        try {
-            wallet = mapper.convertValue(
-                    cryptoWalletProxy.getWalletByEmail(email).getBody(), CryptoWalletDto.class);
-        } catch (FeignException.NotFound e) {
-            return ResponseEntity.status(404).body("Crypto wallet not found!");
+        // ako je konverzija iz nefiat-USD/EUR vec izvrsena, currency-conversion je vec skinuo novac;
+        // ovde skidamo iz baseCurrency samo ako original "from" IS USD/EUR (nije vec skinuto)
+        if (from.equals("USD") || from.equals("EUR")) {
+            bankAccountProxy.debitAccount(new BankAccountDto(email, baseCurrency, baseQuantity));
         }
 
-        cryptoWalletProxy.updateWallet(
-                new CryptoWalletDto(wallet.getEmail(), to,
-                        wallet.getAmount() + cryptoAmount));
+        CryptoWalletDto updatedWallet = mapper.convertValue(
+                cryptoWalletProxy.creditWallet(new CryptoWalletDto(email, to, cryptoAmount)).getBody(),
+                CryptoWalletDto.class);
 
         String message = "Successfully exchanged " + baseCurrency + ": " + baseQuantity
                 + " for " + to + ": " + cryptoAmount;
-        return ResponseEntity.ok(new TradeResponseDto(message,
-                new CryptoWalletDto(wallet.getEmail(), to, wallet.getAmount() + cryptoAmount)));
+        return ResponseEntity.ok(new TradeResponseDto(message, updatedWallet));
     }
 
     // CRYPTO -> FIAT
@@ -161,12 +155,12 @@ public class TradeServiceImplementation implements TradeService {
         CryptoWalletDto wallet;
         try {
             wallet = mapper.convertValue(
-                    cryptoWalletProxy.getWalletByEmail(email).getBody(), CryptoWalletDto.class);
+                    cryptoWalletProxy.getWalletByEmailAndCurrency(email, from).getBody(), CryptoWalletDto.class);
         } catch (FeignException.NotFound e) {
-            return ResponseEntity.status(404).body("Crypto wallet not found!");
+            return ResponseEntity.status(404).body("You don't have a " + from + " wallet balance!");
         }
 
-        if (!wallet.getCurrencyCode().equalsIgnoreCase(from) || wallet.getAmount() < quantity) {
+        if (wallet.getAmount() < quantity) {
             return ResponseEntity.status(400)
                     .body("Insufficient " + from + " in crypto wallet!");
         }
@@ -184,38 +178,31 @@ public class TradeServiceImplementation implements TradeService {
 
         double fiatAmount = quantity * rate.getRate();
 
+        cryptoWalletProxy.debitWallet(new CryptoWalletDto(email, from, quantity));
+
+        BankAccountDto updatedAccount;
         if (!to.equals("USD") && !to.equals("EUR")) {
+            // prvo kreditujemo USD, pa currency-conversion prebacuje u zeljenu valutu
+            bankAccountProxy.creditAccount(new BankAccountDto(email, targetFiat, fiatAmount));
             try {
                 CurrencyConversionDto converted = mapper.convertValue(
                         currencyConversionProxy.currencyConversion(targetFiat, to, fiatAmount, email).getBody(),
                         CurrencyConversionDto.class);
-                fiatAmount = converted.getExchangedAmount();
+                updatedAccount = converted.getAccountState();
             } catch (FeignException e) {
                 return ResponseEntity.status(400).body("Could not convert to " + to + "!");
             }
+        } else {
+            updatedAccount = mapper.convertValue(
+                    bankAccountProxy.creditAccount(new BankAccountDto(email, to, fiatAmount)).getBody(),
+                    BankAccountDto.class);
         }
-
-        cryptoWalletProxy.updateWallet(
-                new CryptoWalletDto(wallet.getEmail(), from,
-                        wallet.getAmount() - quantity));
-
-        BankAccountDto account;
-        try {
-            account = mapper.convertValue(
-                    bankAccountProxy.getAccountByEmail(email).getBody(), BankAccountDto.class);
-        } catch (FeignException.NotFound e) {
-            return ResponseEntity.status(404).body("Bank account not found!");
-        }
-
-        bankAccountProxy.updateAccount(
-                new BankAccountDto(account.getEmail(), to,
-                        account.getAmount() + fiatAmount));
 
         String message = "Successfully exchanged " + from + ": " + quantity
                 + " for " + to + ": " + fiatAmount;
-        return ResponseEntity.ok(new TradeResponseDto(message,
-                new BankAccountDto(account.getEmail(), to, account.getAmount() + fiatAmount)));
+        return ResponseEntity.ok(new TradeResponseDto(message, updatedAccount));
     }
+
     public ResponseEntity<?> tradeFallback(String from, String to, double quantity, String email, Exception e) {
         return ResponseEntity.status(503)
                 .body("Trade service is currently unavailable. Please try again later. Error: " + e.getMessage());

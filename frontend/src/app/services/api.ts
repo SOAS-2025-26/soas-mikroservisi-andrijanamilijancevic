@@ -69,12 +69,21 @@ export class ApiService {
 }
 
   // Bank Account
+  // Bank Account
   getAllAccounts() {
     return this.http.get(`${this.baseUrl}/bank-account`, { headers: this.getHeaders() });
   }
 
-  getAccountByEmail(email: string) {
+  // Sada vraca listu svih valuta jednog korisnika (ranije je vracalo jedan objekat)
+  getAccountsByEmail(email: string) {
     return this.http.get(`${this.baseUrl}/bank-account/email?email=${email}`, { headers: this.getHeaders() });
+  }
+
+  getAccountByEmailAndCurrency(email: string, currencyCode: string) {
+    return this.http.get(
+      `${this.baseUrl}/bank-account/email-currency?email=${email}&currencyCode=${currencyCode}`,
+      { headers: this.getHeaders() }
+    );
   }
 
   createAccount(account: any) {
@@ -94,8 +103,16 @@ export class ApiService {
     return this.http.get(`${this.baseUrl}/crypto-wallet`, { headers: this.getHeaders() });
   }
 
-  getWalletByEmail(email: string) {
+  // Sada vraca listu svih valuta jednog korisnika (ranije je vracalo jedan objekat)
+  getWalletsByEmail(email: string) {
     return this.http.get(`${this.baseUrl}/crypto-wallet/email?email=${email}`, { headers: this.getHeaders() });
+  }
+
+  getWalletByEmailAndCurrency(email: string, currencyCode: string) {
+    return this.http.get(
+      `${this.baseUrl}/crypto-wallet/email-currency?email=${email}&currencyCode=${currencyCode}`,
+      { headers: this.getHeaders() }
+    );
   }
 
   createWallet(wallet: any) {
