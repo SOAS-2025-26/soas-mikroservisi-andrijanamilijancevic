@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import feign.FeignException;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import jakarta.servlet.http.HttpServletRequest;
 import serviceLibrary.dto.bankAccount.BankAccountDto;
 import serviceLibrary.dto.cryptoExchange.CryptoExchangeDto;
 import serviceLibrary.dto.cryptoWallet.CryptoWalletDto;
@@ -40,10 +41,18 @@ public class TradeServiceImplementation implements TradeService {
 
     @Autowired
     private CurrencyConversionProxy currencyConversionProxy;
+   
+    @Autowired
+    private HttpServletRequest request;
 
     @Override
     @CircuitBreaker(name = "tradeService", fallbackMethod = "tradeFallback")
     public ResponseEntity<?> trade(String from, String to, double quantity, String email) {
+        String callerRole = request.getHeader("X-User-Role");
+        if (callerRole == null || !"USER".equalsIgnoreCase(callerRole)) {
+            return ResponseEntity.status(403)
+                .body("Access denied. Only USER role can trade currencies!");
+        }
         boolean fromIsCrypto = CRYPTO_CODES.contains(from.toUpperCase());
         boolean toIsCrypto = CRYPTO_CODES.contains(to.toUpperCase());
 

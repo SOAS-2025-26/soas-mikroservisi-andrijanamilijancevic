@@ -24,7 +24,7 @@ import java.util.Map;
 @Configuration
 @EnableWebFluxSecurity
 public class SecurityConfig {
-	
+
 	@Value("${users.service.url:http://localhost:8770}")
     private String usersServiceUrl;
 
@@ -58,7 +58,8 @@ public class SecurityConfig {
             String password = authentication.getCredentials().toString();
 
             return webClient.get()
-            		.uri(usersServiceUrl + "/users/email?email=" + email)                    .retrieve()
+            		.uri(usersServiceUrl + "/users/email?email=" + email)
+                    .retrieve()
                     .onStatus(status -> status.is4xxClientError(),
                         response -> Mono.error(new RuntimeException("User not found")))
                     .bodyToMono(Map.class)
@@ -85,26 +86,39 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
             .authenticationManager(authenticationManager)
             .authorizeExchange(exchanges -> exchanges
+                // JAVNI ENDPOINTI - BEZ AUTH (po specifikaciji)
                 .pathMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                 .pathMatchers(HttpMethod.GET, "/users/login/**").permitAll()
                 .pathMatchers("/currency-exchange/**").permitAll()
                 .pathMatchers("/crypto-exchange/**").permitAll()
-                .pathMatchers(HttpMethod.GET, "/currency-conversion/**").hasRole("USER")
-                .pathMatchers(HttpMethod.GET, "/trade-service/**").hasRole("USER")
+                
+                // USERS - SA AUTH (po specifikaciji)
+                .pathMatchers(HttpMethod.POST, "/users").hasAnyRole("OWNER", "ADMIN")  // ✅ SA AUTH!
+                .pathMatchers(HttpMethod.GET, "/users/**").hasAnyRole("OWNER", "ADMIN")
+                .pathMatchers(HttpMethod.PUT, "/users/**").hasAnyRole("OWNER", "ADMIN")
+                .pathMatchers(HttpMethod.DELETE, "/users/**").hasRole("OWNER")
+                
+                // BANK ACCOUNT
                 .pathMatchers(HttpMethod.GET, "/bank-account").hasRole("ADMIN")
                 .pathMatchers(HttpMethod.GET, "/bank-account/**").hasAnyRole("ADMIN", "USER")
                 .pathMatchers(HttpMethod.POST, "/bank-account/**").hasRole("ADMIN")
                 .pathMatchers(HttpMethod.PUT, "/bank-account/**").hasRole("ADMIN")
                 .pathMatchers(HttpMethod.DELETE, "/bank-account/**").hasRole("ADMIN")
+                
+                // CRYPTO WALLET
                 .pathMatchers(HttpMethod.GET, "/crypto-wallet").hasRole("ADMIN")
                 .pathMatchers(HttpMethod.GET, "/crypto-wallet/**").hasAnyRole("ADMIN", "USER")
                 .pathMatchers(HttpMethod.POST, "/crypto-wallet/**").hasRole("ADMIN")
                 .pathMatchers(HttpMethod.PUT, "/crypto-wallet/**").hasRole("ADMIN")
                 .pathMatchers(HttpMethod.DELETE, "/crypto-wallet/**").hasRole("ADMIN")
-                .pathMatchers(HttpMethod.GET, "/users/**").hasAnyRole("OWNER", "ADMIN")
-                .pathMatchers(HttpMethod.POST, "/users/**").hasAnyRole("OWNER", "ADMIN")
-                .pathMatchers(HttpMethod.PUT, "/users/**").hasAnyRole("OWNER", "ADMIN")
-                .pathMatchers(HttpMethod.DELETE, "/users/**").hasRole("OWNER")
+                
+                // CURRENCY CONVERSION - SAMO USER (po specifikaciji)
+                .pathMatchers(HttpMethod.GET, "/currency-conversion/**").hasRole("USER")
+                
+                // TRADE SERVICE - SAMO USER (po specifikaciji)
+                .pathMatchers(HttpMethod.GET, "/trade-service/**").hasRole("USER")
+                
+                // OSTALO - AUTH OBAVEZNA
                 .anyExchange().authenticated()
             )
             .httpBasic(org.springframework.security.config.Customizer.withDefaults());
