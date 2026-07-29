@@ -74,4 +74,13 @@ export class BankAccountComponent implements OnInit {
       error: (err) => this.errorMessage = err.error?.message || err.error || 'Greška!'
     });
   }
+  selectForUpdate(account: any) {
+    this.updateData.email = account.email;
+    this.updateData.currencyCode = account.currencyCode;
+    this.updateData.amount = account.amount;
+}
+
+selectForDelete(email: string) {
+    this.deleteEmail = email;
+}
 }

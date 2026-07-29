@@ -30,12 +30,13 @@
 
   <!-- ADMIN - vidi sve novcanike svih korisnika -->
   <div *ngIf="auth.isAdmin()">
-    <table class="table table-striped mb-4">
+    <table class="table table-striped table-hover mb-4">
       <thead class="table-dark">
         <tr>
           <th>Email</th>
           <th>Valuta</th>
           <th>Stanje</th>
+          <th>Akcije</th>
         </tr>
       </thead>
       <tbody>
@@ -43,6 +44,10 @@
           <td>{{ w.email }}</td>
           <td>{{ w.currencyCode }}</td>
           <td>{{ w.amount }}</td>
+          <td>
+            <button class="btn btn-sm btn-warning me-1" (click)="selectForUpdate(w)">Izmeni</button>
+            <button class="btn btn-sm btn-danger" (click)="selectForDelete(w.email)">Obriši</button>
+          </td>
         </tr>
       </tbody>
     </table>
@@ -51,17 +56,35 @@
       <div class="card-header bg-dark text-white">Dodaj novčanik (nova valuta za korisnika)</div>
       <div class="card-body">
         <input class="form-control mb-2" [(ngModel)]="newWallet.email" placeholder="Email">
-        <input class="form-control mb-2" [(ngModel)]="newWallet.currencyCode" placeholder="Valuta (npr. BTC, ETH)">
+        <select class="form-select mb-2" [(ngModel)]="newWallet.currencyCode">
+          <option value="BTC">BTC - Bitcoin</option>
+          <option value="ETH">ETH - Ethereum</option>
+          <option value="SOL">SOL - Solana</option>
+          <option value="ADA">ADA - Cardano</option>
+          <option value="DOGE">DOGE - Dogecoin</option>
+          <option value="XRP">XRP - Ripple</option>
+          <option value="DOT">DOT - Polkadot</option>
+          <option value="LTC">LTC - Litecoin</option>
+        </select>
         <input class="form-control mb-2" type="number" [(ngModel)]="newWallet.amount" placeholder="Iznos">
         <button class="btn btn-success" (click)="createWallet()">Dodaj</button>
       </div>
     </div>
 
     <div class="card mb-3">
-      <div class="card-header bg-dark text-white">Ažuriraj novčanik (email + valuta identifikuju red)</div>
+      <div class="card-header bg-dark text-white">Ažuriraj novčanik</div>
       <div class="card-body">
-        <input class="form-control mb-2" [(ngModel)]="updateData.email" placeholder="Email">
-        <input class="form-control mb-2" [(ngModel)]="updateData.currencyCode" placeholder="Valuta">
+        <input class="form-control mb-2" [(ngModel)]="updateData.email" placeholder="Email" [readonly]="true">
+        <select class="form-select mb-2" [(ngModel)]="updateData.currencyCode">
+          <option value="BTC">BTC - Bitcoin</option>
+          <option value="ETH">ETH - Ethereum</option>
+          <option value="SOL">SOL - Solana</option>
+          <option value="ADA">ADA - Cardano</option>
+          <option value="DOGE">DOGE - Dogecoin</option>
+          <option value="XRP">XRP - Ripple</option>
+          <option value="DOT">DOT - Polkadot</option>
+          <option value="LTC">LTC - Litecoin</option>
+        </select>
         <input class="form-control mb-2" type="number" [(ngModel)]="updateData.amount" placeholder="Novi iznos">
         <button class="btn btn-warning" (click)="updateWallet()">Ažuriraj</button>
       </div>
@@ -70,7 +93,7 @@
     <div class="card mb-3">
       <div class="card-header bg-dark text-white">Obriši sve novčanike korisnika</div>
       <div class="card-body">
-        <input class="form-control mb-2" [(ngModel)]="deleteEmail" placeholder="Email">
+        <input class="form-control mb-2" [(ngModel)]="deleteEmail" placeholder="Email" [readonly]="true">
         <button class="btn btn-danger" (click)="deleteWallet()">Obriši</button>
       </div>
     </div>

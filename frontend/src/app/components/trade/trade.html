@@ -7,15 +7,57 @@
       <div class="card-body">
         <div class="mb-3">
           <label class="form-label">Od valute</label>
-          <input type="text" class="form-control" [(ngModel)]="from" placeholder="npr. ETH, USD">
+          <select class="form-select" [(ngModel)]="from">
+            <optgroup label="Fiat valute">
+              <option value="USD">USD - Američki dolar</option>
+              <option value="EUR">EUR - Euro</option>
+              <option value="RSD">RSD - Srpski dinar</option>
+              <option value="GBP">GBP - Britanska funta</option>
+              <option value="CHF">CHF - Švajcarski franak</option>
+              <option value="JPY">JPY - Japanski jen</option>
+              <option value="CAD">CAD - Kanadski dolar</option>
+              <option value="AUD">AUD - Australijski dolar</option>
+            </optgroup>
+            <optgroup label="Crypto valute">
+              <option value="BTC">BTC - Bitcoin</option>
+              <option value="ETH">ETH - Ethereum</option>
+              <option value="SOL">SOL - Solana</option>
+              <option value="ADA">ADA - Cardano</option>
+              <option value="DOGE">DOGE - Dogecoin</option>
+              <option value="XRP">XRP - Ripple</option>
+              <option value="DOT">DOT - Polkadot</option>
+              <option value="LTC">LTC - Litecoin</option>
+            </optgroup>
+          </select>
         </div>
         <div class="mb-3">
           <label class="form-label">Do valute</label>
-          <input type="text" class="form-control" [(ngModel)]="to" placeholder="npr. USD, BTC">
+          <select class="form-select" [(ngModel)]="to">
+            <optgroup label="Fiat valute">
+              <option value="USD">USD - Američki dolar</option>
+              <option value="EUR">EUR - Euro</option>
+              <option value="RSD">RSD - Srpski dinar</option>
+              <option value="GBP">GBP - Britanska funta</option>
+              <option value="CHF">CHF - Švajcarski franak</option>
+              <option value="JPY">JPY - Japanski jen</option>
+              <option value="CAD">CAD - Kanadski dolar</option>
+              <option value="AUD">AUD - Australijski dolar</option>
+            </optgroup>
+            <optgroup label="Crypto valute">
+              <option value="BTC">BTC - Bitcoin</option>
+              <option value="ETH">ETH - Ethereum</option>
+              <option value="SOL">SOL - Solana</option>
+              <option value="ADA">ADA - Cardano</option>
+              <option value="DOGE">DOGE - Dogecoin</option>
+              <option value="XRP">XRP - Ripple</option>
+              <option value="DOT">DOT - Polkadot</option>
+              <option value="LTC">LTC - Litecoin</option>
+            </optgroup>
+          </select>
         </div>
         <div class="mb-3">
           <label class="form-label">Količina</label>
-          <input type="number" class="form-control" [(ngModel)]="quantity">
+          <input type="number" class="form-control" [(ngModel)]="quantity" min="0">
         </div>
         <button class="btn btn-dark w-100" (click)="trade()">Razmeni</button>
 
@@ -24,6 +66,7 @@
         <div *ngIf="result" class="alert alert-success mt-3">
           <p><strong>Poruka:</strong> {{ result.message }}</p>
           <div *ngIf="result.accountState">
+            <hr>
             <p><strong>Email:</strong> {{ result.accountState.email }}</p>
             <p><strong>Valuta:</strong> {{ result.accountState.currencyCode }}</p>
             <p><strong>Stanje:</strong> {{ result.accountState.amount }}</p>

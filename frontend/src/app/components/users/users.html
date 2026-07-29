@@ -5,17 +5,22 @@
   <div *ngIf="successMessage" class="alert alert-success">{{ successMessage }}</div>
 
   <!-- Lista korisnika -->
-  <table class="table table-striped mb-4">
+  <table class="table table-striped table-hover mb-4">
     <thead class="table-dark">
       <tr>
         <th>Email</th>
         <th>Uloga</th>
+        <th>Akcije</th>
       </tr>
     </thead>
     <tbody>
-      <tr *ngFor="let user of users">
+      <tr *ngFor="let user of users" style="cursor: pointer;">
         <td>{{ user.email }}</td>
         <td>{{ user.role }}</td>
+        <td>
+          <button class="btn btn-sm btn-warning me-1" (click)="selectForUpdate(user)">Izmeni</button>
+          <button *ngIf="auth.isOwner()" class="btn btn-sm btn-danger" (click)="selectForDelete(user.email)">Obriši</button>
+        </td>
       </tr>
     </tbody>
   </table>
@@ -39,11 +44,12 @@
   <div class="card mb-3">
     <div class="card-header bg-dark text-white">Ažuriraj korisnika</div>
     <div class="card-body">
-      <input class="form-control mb-2" [(ngModel)]="updateData.email" placeholder="Email">
+      <input class="form-control mb-2" [(ngModel)]="updateData.email" placeholder="Email" [readonly]="true">
       <input class="form-control mb-2" type="password" [(ngModel)]="updateData.password" placeholder="Nova lozinka">
       <select class="form-select mb-2" [(ngModel)]="updateData.role">
         <option value="USER">USER</option>
         <option value="ADMIN">ADMIN</option>
+        <option *ngIf="auth.isOwner()" value="OWNER">OWNER</option>
       </select>
       <button class="btn btn-warning" (click)="updateUser()">Ažuriraj</button>
     </div>
@@ -53,7 +59,7 @@
   <div *ngIf="auth.isOwner()" class="card mb-3">
     <div class="card-header bg-dark text-white">Obriši korisnika</div>
     <div class="card-body">
-      <input class="form-control mb-2" [(ngModel)]="deleteEmail" placeholder="Email">
+      <input class="form-control mb-2" [(ngModel)]="deleteEmail" placeholder="Email" [readonly]="true">
       <button class="btn btn-danger" (click)="deleteUser()">Obriši</button>
     </div>
   </div>

@@ -65,4 +65,13 @@ export class UsersComponent implements OnInit {
       error: (err) => this.errorMessage = typeof err.error === 'string' ? err.error : 'Greška!'
     });
   }
+  selectForUpdate(user: any) {
+    this.updateData.email = user.email;
+    this.updateData.role = user.role;
+    this.updateData.password = '';
+}
+
+selectForDelete(email: string) {
+    this.deleteEmail = email;
+}
 }

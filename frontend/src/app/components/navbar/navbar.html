@@ -12,16 +12,16 @@
         <li class="nav-item">
           <a class="nav-link" routerLink="/crypto-exchange">Crypto Exchange</a>
         </li>
-        <li class="nav-item" *ngIf="auth.isLoggedIn()">
+        <li class="nav-item" *ngIf="auth.isUser()">
           <a class="nav-link" routerLink="/currency-conversion">Currency Conversion</a>
         </li>
         <li class="nav-item" *ngIf="auth.isUser()">
           <a class="nav-link" routerLink="/trade">Trade</a>
         </li>
-        <li class="nav-item" *ngIf="auth.isLoggedIn()">
+        <li class="nav-item" *ngIf="auth.isAdmin() || auth.isUser()">
           <a class="nav-link" routerLink="/bank-account">Bank Account</a>
         </li>
-        <li class="nav-item" *ngIf="auth.isLoggedIn()">
+        <li class="nav-item" *ngIf="auth.isAdmin() || auth.isUser()">
           <a class="nav-link" routerLink="/crypto-wallet">Crypto Wallet</a>
         </li>
         <li class="nav-item" *ngIf="auth.isAdmin() || auth.isOwner()">

@@ -6,21 +6,33 @@
       </div>
       <div class="card-body">
         <div class="mb-3">
-          <label class="form-label">Crypto valuta</label>
+          <label class="form-label">Od valute</label>
           <select class="form-select" [(ngModel)]="from">
-            <option value="BTC">Bitcoin (BTC)</option>
-            <option value="ETH">Ethereum (ETH)</option>
-            <option value="SOL">Solana (SOL)</option>
-            <option value="ADA">Cardano (ADA)</option>
-            <option value="DOGE">Dogecoin (DOGE)</option>
-            <option value="XRP">Ripple (XRP)</option>
-            <option value="DOT">Polkadot (DOT)</option>
-            <option value="LTC">Litecoin (LTC)</option>
+            <option value="BTC">BTC - Bitcoin</option>
+            <option value="ETH">ETH - Ethereum</option>
+            <option value="SOL">SOL - Solana</option>
+            <option value="ADA">ADA - Cardano</option>
+            <option value="DOGE">DOGE - Dogecoin</option>
+            <option value="XRP">XRP - Ripple</option>
+            <option value="DOT">DOT - Polkadot</option>
+            <option value="LTC">LTC - Litecoin</option>
           </select>
         </div>
         <div class="mb-3">
           <label class="form-label">Do valute</label>
-          <input type="text" class="form-control" [(ngModel)]="to" placeholder="npr. USD">
+          <select class="form-select" [(ngModel)]="to">
+            <option value="USD">USD - Američki dolar</option>
+            <option value="EUR">EUR - Euro</option>
+            <option value="GBP">GBP - Britanska funta</option>
+            <option value="BTC">BTC - Bitcoin</option>
+            <option value="ETH">ETH - Ethereum</option>
+            <option value="SOL">SOL - Solana</option>
+            <option value="ADA">ADA - Cardano</option>
+            <option value="DOGE">DOGE - Dogecoin</option>
+            <option value="XRP">XRP - Ripple</option>
+            <option value="DOT">DOT - Polkadot</option>
+            <option value="LTC">LTC - Litecoin</option>
+          </select>
         </div>
         <button class="btn btn-dark w-100" (click)="getRate()">Dohvati kurs</button>
 

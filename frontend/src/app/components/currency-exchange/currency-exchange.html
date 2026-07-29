@@ -7,11 +7,29 @@
       <div class="card-body">
         <div class="mb-3">
           <label class="form-label">Od valute</label>
-          <input type="text" class="form-control" [(ngModel)]="from" placeholder="npr. USD">
+          <select class="form-select" [(ngModel)]="from">
+            <option value="USD">USD - Američki dolar</option>
+            <option value="EUR">EUR - Euro</option>
+            <option value="RSD">RSD - Srpski dinar</option>
+            <option value="GBP">GBP - Britanska funta</option>
+            <option value="CHF">CHF - Švajcarski franak</option>
+            <option value="JPY">JPY - Japanski jen</option>
+            <option value="CAD">CAD - Kanadski dolar</option>
+            <option value="AUD">AUD - Australijski dolar</option>
+          </select>
         </div>
         <div class="mb-3">
           <label class="form-label">Do valute</label>
-          <input type="text" class="form-control" [(ngModel)]="to" placeholder="npr. EUR">
+          <select class="form-select" [(ngModel)]="to">
+            <option value="USD">USD - Američki dolar</option>
+            <option value="EUR">EUR - Euro</option>
+            <option value="RSD">RSD - Srpski dinar</option>
+            <option value="GBP">GBP - Britanska funta</option>
+            <option value="CHF">CHF - Švajcarski franak</option>
+            <option value="JPY">JPY - Japanski jen</option>
+            <option value="CAD">CAD - Kanadski dolar</option>
+            <option value="AUD">AUD - Australijski dolar</option>
+          </select>
         </div>
         <button class="btn btn-dark w-100" (click)="getRate()">Dohvati kurs</button>
 

@@ -75,4 +75,13 @@ export class CryptoWalletComponent implements OnInit {
       error: (err) => this.errorMessage = err.error?.message || err.error || 'Greška!'
     });
   }
+  selectForUpdate(wallet: any) {
+    this.updateData.email = wallet.email;
+    this.updateData.currencyCode = wallet.currencyCode;
+    this.updateData.amount = wallet.amount;
+}
+
+selectForDelete(email: string) {
+    this.deleteEmail = email;
+}
 }

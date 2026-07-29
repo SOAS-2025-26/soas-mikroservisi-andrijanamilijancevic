@@ -30,12 +30,13 @@
 
   <!-- ADMIN - vidi sve racune svih korisnika -->
   <div *ngIf="auth.isAdmin()">
-    <table class="table table-striped mb-4">
+    <table class="table table-striped table-hover mb-4">
       <thead class="table-dark">
         <tr>
           <th>Email</th>
           <th>Valuta</th>
           <th>Stanje</th>
+          <th>Akcije</th>
         </tr>
       </thead>
       <tbody>
@@ -43,6 +44,10 @@
           <td>{{ acc.email }}</td>
           <td>{{ acc.currencyCode }}</td>
           <td>{{ acc.amount }}</td>
+          <td>
+            <button class="btn btn-sm btn-warning me-1" (click)="selectForUpdate(acc)">Izmeni</button>
+            <button class="btn btn-sm btn-danger" (click)="selectForDelete(acc.email)">Obriši</button>
+          </td>
         </tr>
       </tbody>
     </table>
@@ -52,7 +57,16 @@
       <div class="card-header bg-dark text-white">Dodaj račun (nova valuta za korisnika)</div>
       <div class="card-body">
         <input class="form-control mb-2" [(ngModel)]="newAccount.email" placeholder="Email">
-        <input class="form-control mb-2" [(ngModel)]="newAccount.currencyCode" placeholder="Valuta (npr. EUR, USD, RSD)">
+        <select class="form-select mb-2" [(ngModel)]="newAccount.currencyCode">
+          <option value="USD">USD - Američki dolar</option>
+          <option value="EUR">EUR - Euro</option>
+          <option value="RSD">RSD - Srpski dinar</option>
+          <option value="GBP">GBP - Britanska funta</option>
+          <option value="CHF">CHF - Švajcarski franak</option>
+          <option value="JPY">JPY - Japanski jen</option>
+          <option value="CAD">CAD - Kanadski dolar</option>
+          <option value="AUD">AUD - Australijski dolar</option>
+        </select>
         <input class="form-control mb-2" type="number" [(ngModel)]="newAccount.amount" placeholder="Iznos">
         <button class="btn btn-success" (click)="createAccount()">Dodaj</button>
       </div>
@@ -60,10 +74,19 @@
 
     <!-- Azuriraj racun -->
     <div class="card mb-3">
-      <div class="card-header bg-dark text-white">Ažuriraj račun (email + valuta identifikuju red)</div>
+      <div class="card-header bg-dark text-white">Ažuriraj račun</div>
       <div class="card-body">
-        <input class="form-control mb-2" [(ngModel)]="updateData.email" placeholder="Email">
-        <input class="form-control mb-2" [(ngModel)]="updateData.currencyCode" placeholder="Valuta">
+        <input class="form-control mb-2" [(ngModel)]="updateData.email" placeholder="Email" [readonly]="true">
+        <select class="form-select mb-2" [(ngModel)]="updateData.currencyCode">
+          <option value="USD">USD - Američki dolar</option>
+          <option value="EUR">EUR - Euro</option>
+          <option value="RSD">RSD - Srpski dinar</option>
+          <option value="GBP">GBP - Britanska funta</option>
+          <option value="CHF">CHF - Švajcarski franak</option>
+          <option value="JPY">JPY - Japanski jen</option>
+          <option value="CAD">CAD - Kanadski dolar</option>
+          <option value="AUD">AUD - Australijski dolar</option>
+        </select>
         <input class="form-control mb-2" type="number" [(ngModel)]="updateData.amount" placeholder="Novi iznos">
         <button class="btn btn-warning" (click)="updateAccount()">Ažuriraj</button>
       </div>
@@ -73,7 +96,7 @@
     <div class="card mb-3">
       <div class="card-header bg-dark text-white">Obriši sve račune korisnika</div>
       <div class="card-body">
-        <input class="form-control mb-2" [(ngModel)]="deleteEmail" placeholder="Email">
+        <input class="form-control mb-2" [(ngModel)]="deleteEmail" placeholder="Email" [readonly]="true">
         <button class="btn btn-danger" (click)="deleteAccount()">Obriši</button>
       </div>
     </div>
