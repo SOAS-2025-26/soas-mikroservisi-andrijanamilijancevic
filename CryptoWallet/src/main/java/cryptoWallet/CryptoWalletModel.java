@@ -14,9 +14,9 @@ import jakarta.persistence.UniqueConstraint;
 })
 public class CryptoWalletModel {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    private int id;
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private int id;
 
     @Column(nullable = false)
     private String email;

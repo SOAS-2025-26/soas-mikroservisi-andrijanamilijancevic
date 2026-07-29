@@ -1,0 +1,1 @@
+INSERT INTO crypto_wallet (email, currency_code, amount) VALUES ('user@soas.com', 'ETH', 1.0);

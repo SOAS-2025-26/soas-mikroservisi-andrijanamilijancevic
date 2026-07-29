@@ -89,7 +89,8 @@ public class CryptoWalletServiceImplementation implements CryptoWalletService {
     @Override
     public ResponseEntity<?> createWallet(CryptoWalletDto body) {
         String callerRole = request.getHeader("X-User-Role");
-        if (isOwner(callerRole) || callerRole == null) {
+        // Dozvoljeno: ADMIN (ručno kreiranje) i OWNER/null (interni poziv iz UsersService)
+        if ("USER".equalsIgnoreCase(callerRole)) {
             return ResponseEntity.status(403).body("Access denied.");
         }
         

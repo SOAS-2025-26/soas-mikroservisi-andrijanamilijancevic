@@ -20,11 +20,10 @@ export class TradeComponent {
 
   constructor(private api: ApiService, private auth: AuthService) {}
 
-  trade() {
+ trade() {
     this.errorMessage = '';
     this.result = null;
-    const email = this.auth.getEmail();
-    this.api.trade(this.from, this.to, this.quantity, email).subscribe({
+    this.api.trade(this.from, this.to, this.quantity).subscribe({
       next: (data) => this.result = data,
       error: (err) => this.errorMessage = 'Greška pri razmeni! ' + (err.error?.message || '')
     });

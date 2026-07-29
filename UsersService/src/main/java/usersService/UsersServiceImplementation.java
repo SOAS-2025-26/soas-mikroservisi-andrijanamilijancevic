@@ -52,8 +52,11 @@ public class UsersServiceImplementation implements UsersService {
     @Override
     public ResponseEntity<?> getUserByEmail(String email) {
         String callerRole = request.getHeader("X-User-Role");
-        if (callerRole == null || (!"OWNER".equalsIgnoreCase(callerRole) && !"ADMIN".equalsIgnoreCase(callerRole))) {
-            return ResponseEntity.status(403).body("Access denied. Only OWNER or ADMIN can view user by email.");
+        // Ako nema headera = interni poziv iz auth managera (Gateway) — dozvoli
+        if (callerRole != null && !callerRole.isBlank()) {
+            if (!"OWNER".equalsIgnoreCase(callerRole) && !"ADMIN".equalsIgnoreCase(callerRole)) {
+                return ResponseEntity.status(403).body("Access denied. Only OWNER or ADMIN can view user by email.");
+            }
         }
 
         UserModel model = repo.findByEmailIgnoreCase(email);

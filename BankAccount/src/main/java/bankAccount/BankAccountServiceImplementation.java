@@ -89,12 +89,11 @@ public class BankAccountServiceImplementation implements BankAccountService {
     @Override
     public ResponseEntity<?> createAccount(BankAccountDto body) {
         String callerRole = request.getHeader("X-User-Role");
-        if (isOwner(callerRole) || callerRole == null) {
+        // Dozvoljeno: ADMIN (ručno kreiranje) i OWNER/null (interni poziv iz UsersService)
+        if ("USER".equalsIgnoreCase(callerRole)) {
             return ResponseEntity.status(403).body("Access denied.");
         }
-        // Samo ADMIN može ručno kreirati, USER kreira automatski preko registracije (ili dozvoljavamo bez provere ako dolazi sa internog servisa)
-        // Pošto i UsersService poziva ovo eksterno (tada je uloga OWNER/ADMIN u zavisnosti ko je kreirao korisnika), pustićemo ako je ADMIN ili OWNER
-        
+       
         BankAccountModel existing = repo.findByEmailIgnoreCaseAndCurrencyCodeIgnoreCase(
                 body.getEmail(), body.getCurrencyCode());
         if (existing != null) {

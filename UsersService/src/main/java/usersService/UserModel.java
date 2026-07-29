@@ -9,9 +9,9 @@ import jakarta.persistence.Id;
 @Entity
 public class UserModel {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    private int id;
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private int id;
 
     @Column(nullable = false, unique = true)
     private String email;
@@ -19,7 +19,7 @@ public class UserModel {
     @Column(nullable = false)
     private String password;
 
-    @Column(nullable = false, columnDefinition = "VARCHAR(10) CHECK (role IN ('OWNER','ADMIN','USER'))")
+    @Column(nullable = false)
     private String role;
 
     public UserModel() {

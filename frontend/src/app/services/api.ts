@@ -37,12 +37,12 @@ export class ApiService {
   }
 
   // Trade Service
-  trade(from: string, to: string, quantity: number, email: string) {
+  trade(from: string, to: string, quantity: number) {
     return this.http.get(
-      `${this.baseUrl}/trade-service?from=${from}&to=${to}&quantity=${quantity}&email=${email}`,
+      `${this.baseUrl}/trade-service?from=${from}&to=${to}&quantity=${quantity}`,
       { headers: this.getHeaders() }
     );
-  }
+}
 
   // Users
   getAllUsers() {
@@ -62,8 +62,11 @@ export class ApiService {
   }
 
   deleteUser(email: string) {
-    return this.http.delete(`${this.baseUrl}/users?email=${email}`, { headers: this.getHeaders() });
-  }
+    return this.http.delete(`${this.baseUrl}/users?email=${email}`, { 
+      headers: this.getHeaders(),
+      responseType: 'text'
+    });
+}
   loginUser(email: string, password: string) {
     return this.http.get(`${this.baseUrl}/users/login?email=${email}&password=${password}`);
 }

@@ -6,13 +6,14 @@
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
 		<version>4.1.0</version>
-		<relativePath/> <!-- lookup parent from repository -->
+		<relativePath/>
 	</parent>
 	<groupId>soas</groupId>
 	<artifactId>crypto-wallet</artifactId>
 	<version>1.0.0</version>
 	<name>CryptoWallet</name>
-<description>Service responsible for managing crypto wallets</description>	<url/>
+	<description>Service responsible for managing crypto wallets</description>
+	<url/>
 	<licenses>
 		<license/>
 	</licenses>
@@ -46,7 +47,10 @@
 			<groupId>org.springframework.cloud</groupId>
 			<artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
 		</dependency>
-
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-actuator</artifactId>
+		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-devtools</artifactId>
@@ -58,15 +62,15 @@
 			<artifactId>h2</artifactId>
 			<scope>runtime</scope>
 		</dependency>
-			<dependency>
-    <groupId>soas</groupId>
-    <artifactId>service-library</artifactId>
-    <version>1.0.0</version>
+		<dependency>
+			<groupId>soas</groupId>
+			<artifactId>service-library</artifactId>
+			<version>1.0.0</version>
 		</dependency>
 		<dependency>
-    <groupId>soas</groupId>
-    <artifactId>util</artifactId>
-    <version>1.0.0</version>
+			<groupId>soas</groupId>
+			<artifactId>util</artifactId>
+			<version>1.0.0</version>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -88,10 +92,8 @@
 				<type>pom</type>
 				<scope>import</scope>
 			</dependency>
-	
 		</dependencies>
 	</dependencyManagement>
-
 	<build>
 		<plugins>
 			<plugin>
@@ -100,5 +102,4 @@
 			</plugin>
 		</plugins>
 	</build>
-
 </project>

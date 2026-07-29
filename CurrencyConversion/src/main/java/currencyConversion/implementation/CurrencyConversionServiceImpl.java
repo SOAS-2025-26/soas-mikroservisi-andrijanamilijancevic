@@ -31,18 +31,16 @@ public class CurrencyConversionServiceImpl implements CurrencyConversionService 
     private final ObjectMapper mapper = new ObjectMapper();
 
     @Override
-    public ResponseEntity<?> currencyConversion(String from, String to, double quantity, String email) {
-        // ✅ ROLE CHECK - NOVO
+    public ResponseEntity<?> currencyConversion(String from, String to, double quantity) {
         String callerRole = request.getHeader("X-User-Role");
         if (callerRole == null || !"USER".equalsIgnoreCase(callerRole)) {
             return ResponseEntity.status(403)
                 .body("Access denied. Only USER role can convert currencies!");
         }
-        
-        // Ako email nije prosleđen kroz parametar, uzmi ga iz X-User-Email zaglavlja
-        String activeEmail = (email != null && !email.trim().isEmpty()) ? email : request.getHeader("X-User-Email");
-        
-        if (activeEmail == null) {
+
+        String activeEmail = request.getHeader("X-User-Email");
+
+        if (activeEmail == null || activeEmail.isBlank()) {
             return ResponseEntity.status(400).body("User email is missing in the request context!");
         }
 

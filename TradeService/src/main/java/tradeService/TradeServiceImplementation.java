@@ -47,14 +47,17 @@ public class TradeServiceImplementation implements TradeService {
 
     @Override
     @CircuitBreaker(name = "tradeService", fallbackMethod = "tradeFallback")
-    public ResponseEntity<?> trade(String from, String to, double quantity, String email) {
+    public ResponseEntity<?> trade(String from, String to, double quantity) {
         String callerRole = request.getHeader("X-User-Role");
         if (callerRole == null || !"USER".equalsIgnoreCase(callerRole)) {
             return ResponseEntity.status(403)
                 .body("Access denied. Only USER role can trade currencies!");
         }
-        boolean fromIsCrypto = CRYPTO_CODES.contains(from.toUpperCase());
-        boolean toIsCrypto = CRYPTO_CODES.contains(to.toUpperCase());
+        String email = request.getHeader("X-User-Email");
+        if (email == null || email.isBlank()) {
+            return ResponseEntity.status(400).body("User email missing from request context!");
+        }
+        boolean fromIsCrypto = CRYPTO_CODES.contains(from.toUpperCase()); boolean toIsCrypto = CRYPTO_CODES.contains(to.toUpperCase());
 
         if (fromIsCrypto && toIsCrypto) {
             return cryptoToCrypto(from.toUpperCase(), to.toUpperCase(), quantity, email);
@@ -112,7 +115,7 @@ public class TradeServiceImplementation implements TradeService {
         if (!from.equals("USD") && !from.equals("EUR")) {
             try {
                 CurrencyConversionDto converted = mapper.convertValue(
-                        currencyConversionProxy.currencyConversion(from, "USD", quantity, email).getBody(),
+                        currencyConversionProxy.currencyConversion(from, "USD", quantity).getBody(),
                         CurrencyConversionDto.class);
                 baseCurrency = "USD";
                 baseQuantity = converted.getExchangedAmount();
@@ -201,7 +204,7 @@ public class TradeServiceImplementation implements TradeService {
             bankAccountProxy.creditAccount(new BankAccountDto(email, targetFiat, fiatAmount));
             try {
                 CurrencyConversionDto converted = mapper.convertValue(
-                        currencyConversionProxy.currencyConversion(targetFiat, to, fiatAmount, email).getBody(),
+                        currencyConversionProxy.currencyConversion(targetFiat, to, fiatAmount).getBody(),
                         CurrencyConversionDto.class);
                 updatedAccount = converted.getAccountState();
             } catch (FeignException e) {
@@ -218,8 +221,8 @@ public class TradeServiceImplementation implements TradeService {
         return ResponseEntity.ok(new TradeResponseDto(message, updatedAccount));
     }
 
-    public ResponseEntity<?> tradeFallback(String from, String to, double quantity, String email, Exception e) {
-        return ResponseEntity.status(503)
+    public ResponseEntity<?> tradeFallback(String from, String to, double quantity, Exception e) {
+    	return ResponseEntity.status(503)
                 .body("Trade service is currently unavailable. Please try again later. Error: " + e.getMessage());
     }
 }

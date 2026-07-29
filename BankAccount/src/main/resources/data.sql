@@ -1,0 +1,1 @@
+INSERT INTO bank_account (email, currency_code, amount) VALUES ('user@soas.com', 'EUR', 1000.0);

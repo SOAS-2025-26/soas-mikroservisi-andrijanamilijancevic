@@ -87,10 +87,11 @@ public class SecurityConfig {
             .authenticationManager(authenticationManager)
             .authorizeExchange(exchanges -> exchanges
                 // JAVNI ENDPOINTI - BEZ AUTH (po specifikaciji)
-                .pathMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                .pathMatchers(HttpMethod.GET, "/users/login/**").permitAll()
-                .pathMatchers("/currency-exchange/**").permitAll()
-                .pathMatchers("/crypto-exchange/**").permitAll()
+            		.pathMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+            		.pathMatchers(HttpMethod.GET, "/users/login").permitAll()
+            		.pathMatchers(HttpMethod.GET, "/users/login/**").permitAll()
+            		.pathMatchers("/currency-exchange/**").permitAll()
+            		.pathMatchers("/crypto-exchange/**").permitAll()
                 
                 // USERS - SA AUTH (po specifikaciji)
                 .pathMatchers(HttpMethod.POST, "/users").hasAnyRole("OWNER", "ADMIN")  // ✅ SA AUTH!

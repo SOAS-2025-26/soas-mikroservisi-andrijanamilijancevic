@@ -11,6 +11,9 @@ public class CurrencyConversionDto {
     private String message;
     private BankAccountDto accountState;
 
+    public CurrencyConversionDto() {
+    }
+
     public CurrencyConversionDto(CurrencyExchangeDto exchange, double quantity, double exchangedAmount,
             String message, BankAccountDto accountState) {
         this.exchange = exchange;

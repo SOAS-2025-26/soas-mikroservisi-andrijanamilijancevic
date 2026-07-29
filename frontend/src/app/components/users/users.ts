@@ -42,7 +42,7 @@ export class UsersComponent implements OnInit {
         this.successMessage = 'Korisnik uspešno kreiran!';
         this.loadUsers();
       },
-      error: (err) => this.errorMessage = err.error || 'Greška!'
+      error: (err) => this.errorMessage = typeof err.error === 'string' ? err.error : 'Greška!'
     });
   }
 
@@ -52,7 +52,7 @@ export class UsersComponent implements OnInit {
         this.successMessage = 'Korisnik uspešno ažuriran!';
         this.loadUsers();
       },
-      error: (err) => this.errorMessage = err.error || 'Greška!'
+      error: (err) => this.errorMessage = typeof err.error === 'string' ? err.error : 'Greška!'
     });
   }
 
@@ -62,7 +62,7 @@ export class UsersComponent implements OnInit {
         this.successMessage = 'Korisnik uspešno obrisan!';
         this.loadUsers();
       },
-      error: (err) => this.errorMessage = err.error || 'Greška!'
+      error: (err) => this.errorMessage = typeof err.error === 'string' ? err.error : 'Greška!'
     });
   }
 }
