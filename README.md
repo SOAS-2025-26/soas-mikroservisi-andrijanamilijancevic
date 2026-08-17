@@ -1,59 +1,95 @@
-# SOAS Project - Currency & Crypto Exchange Application
+# SOAS Exchange
 
-## Mikroservisi i URL-ovi
-
-### Preko API Gateway-a (port 8765)
-
-| Servis | URL | Metoda |
-|--------|-----|--------|
-| Currency Exchange | http://localhost:8765/currency-exchange?from=USD&to=EUR | GET |
-| Currency Conversion | http://localhost:8765/currency-conversion?from=USD&to=EUR&quantity=100 | GET |
-| Trade Service | http://localhost:8765/trade-service?from=ETH&to=USD&quantity=1&email=user@soas.com | GET |
-| Users - svi | http://localhost:8765/users | GET |
-| Users - po emailu | http://localhost:8765/users/email?email=user@soas.com | GET |
-| Users - dodaj | http://localhost:8765/users | POST |
-| Users - azuriraj | http://localhost:8765/users | PUT |
-| Users - obrisi | http://localhost:8765/users?email=user@soas.com | DELETE |
-| Bank Account - svi | http://localhost:8765/bank-account | GET |
-| Bank Account - po emailu | http://localhost:8765/bank-account/email?email=user@soas.com | GET |
-| Bank Account - dodaj | http://localhost:8765/bank-account | POST |
-| Bank Account - azuriraj | http://localhost:8765/bank-account | PUT |
-| Bank Account - obrisi | http://localhost:8765/bank-account?email=user@soas.com | DELETE |
-| Crypto Wallet - svi | http://localhost:8765/crypto-wallet | GET |
-| Crypto Wallet - po emailu | http://localhost:8765/crypto-wallet/email?email=user@soas.com | GET |
-| Crypto Wallet - dodaj | http://localhost:8765/crypto-wallet | POST |
-| Crypto Wallet - azuriraj | http://localhost:8765/crypto-wallet | PUT |
-| Crypto Wallet - obrisi | http://localhost:8765/crypto-wallet?email=user@soas.com | DELETE |
-| Crypto Exchange | http://localhost:8765/crypto-exchange?from=BTC&to=USD | GET |
-
-## Kredencijali
-
-### API Gateway (Basic Auth)
-
-| Korisnik | Email | Lozinka | Uloga |
-|----------|-------|---------|-------|
-| Owner | owner@soas.com | owner123 | OWNER |
-| Admin | admin@soas.com | admin123 | ADMIN |
-| User | user@soas.com | user123 | USER |
-
-## Portovi mikroservisa
-
-| Mikroservis | Port |
-|-------------|------|
-| Naming Server (Eureka) | 8761 |
-| API Gateway | 8765 |
-| Users Service | 8770 |
-| Currency Exchange | 8000 |
-| Currency Conversion | 8100 |
-| Bank Account | 8200 |
-| Crypto Wallet | 8300 |
-| Crypto Exchange | 8400 |
-| Trade Service | 8600 |
+Aplikacija za razmenu običnih (fiat) i kripto valuta.
 
 ## Tehnologije
-- Java 17
-- Spring Boot 4.1.0
-- Spring Cloud (Eureka, Gateway, OpenFeign)
-- H2 In-Memory Database
-- Resilience4J (Circuit Breaker)
-- Maven
+- Java 17, Spring Boot, Maven
+- Angular frontend
+- H2 in-memory baza podataka
+- Docker, Eureka, Feign
+
+---
+
+## Kredencijali korisnika
+
+| Email | Lozinka | Uloga |
+|-------|---------|-------|
+| owner@soas.com | owner123 | OWNER |
+| admin@soas.com | admin123 | ADMIN |
+| user@soas.com | user123 | USER |
+
+---
+
+## Funkcionalni URL-ovi (preko API Gateway-a na portu 8765)
+
+### Javni endpointi (bez autentikacije)
+| Opis | URL |
+|------|-----|
+| Kurs fiat valuta | `GET http://localhost:8765/currency-exchange?from=EUR&to=RSD` |
+| Kurs kripto valuta | `GET http://localhost:8765/crypto-exchange?from=BTC&to=USD` |
+| Login | `GET http://localhost:8765/users/login?email=owner@soas.com&password=owner123` |
+
+### Users Service (OWNER i ADMIN)
+| Opis | URL |
+|------|-----|
+| Lista svih korisnika | `GET http://localhost:8765/users` |
+| Korisnik po emailu | `GET http://localhost:8765/users/email?email=user@soas.com` |
+| Kreiraj korisnika | `POST http://localhost:8765/users` |
+| Ažuriraj korisnika | `PUT http://localhost:8765/users` |
+| Obriši korisnika | `DELETE http://localhost:8765/users?email=user@soas.com` |
+
+### Bank Account (ADMIN i USER)
+| Opis | URL |
+|------|-----|
+| Svi računi | `GET http://localhost:8765/bank-account` |
+| Računi po emailu | `GET http://localhost:8765/bank-account/email?email=user@soas.com` |
+| Račun po emailu i valuti | `GET http://localhost:8765/bank-account/email-currency?email=user@soas.com&currencyCode=EUR` |
+| Kreiraj račun | `POST http://localhost:8765/bank-account` |
+| Ažuriraj račun | `PUT http://localhost:8765/bank-account` |
+| Obriši račune korisnika | `DELETE http://localhost:8765/bank-account?email=user@soas.com` |
+
+### Crypto Wallet (ADMIN i USER)
+| Opis | URL |
+|------|-----|
+| Svi novčanici | `GET http://localhost:8765/crypto-wallet` |
+| Novčanici po emailu | `GET http://localhost:8765/crypto-wallet/email?email=user@soas.com` |
+| Novčanik po emailu i valuti | `GET http://localhost:8765/crypto-wallet/email-currency?email=user@soas.com&currencyCode=ETH` |
+| Kreiraj novčanik | `POST http://localhost:8765/crypto-wallet` |
+| Ažuriraj novčanik | `PUT http://localhost:8765/crypto-wallet` |
+| Obriši novčanike korisnika | `DELETE http://localhost:8765/crypto-wallet?email=user@soas.com` |
+
+### Currency Conversion (samo USER)
+| Opis | URL |
+|------|-----|
+| Razmena fiat valuta | `GET http://localhost:8765/currency-conversion?from=EUR&to=RSD&quantity=100` |
+
+### Trade Service (samo USER)
+| Opis | URL |
+|------|-----|
+| Razmena valuta | `GET http://localhost:8765/trade-service?from=EUR&to=ETH&quantity=100` |
+| Crypto u fiat | `GET http://localhost:8765/trade-service?from=ETH&to=EUR&quantity=0.1` |
+| Crypto u crypto | `GET http://localhost:8765/trade-service?from=ETH&to=BTC&quantity=0.1` |
+
+---
+
+## Docker
+
+Slike su dostupne na Docker Hub-u: [andrijanamilijancevic](https://hub.docker.com/u/andrijanamilijancevic)
+
+### Pokretanje aplikacije
+```bash
+docker compose up
+```
+
+### Mikroservisi i portovi
+| Mikroservis | Port | Docker Hub |
+|-------------|------|------------|
+| NamingServer | 8761 | andrijanamilijancevic/naming-server:latest |
+| ApiGateway | 8765 | andrijanamilijancevic/api-gateway:latest |
+| UsersService | 8770 | andrijanamilijancevic/users-service:latest |
+| BankAccount | 8200 | andrijanamilijancevic/bank-account:latest |
+| CryptoWallet | 8300 | andrijanamilijancevic/crypto-wallet:latest |
+| CurrencyExchange | 8000 | andrijanamilijancevic/currency-exchange:latest |
+| CurrencyConversion | 8100 | andrijanamilijancevic/currency-conversion:latest |
+| CryptoExchange | 8400 | andrijanamilijancevic/crypto-exchange:latest |
+| TradeService | 8600 | andrijanamilijancevic/trade-service:latest |

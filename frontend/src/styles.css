@@ -1,1 +1,105 @@
-/* You can add global styles to this file, and also import other style files */
+/* Global pink theme */
+
+body {
+  background-color: #fff0f5;
+  color: #4a0030;
+}
+
+.navbar.bg-dark {
+  background-color: #c2185b !important;
+}
+
+.navbar-brand, .nav-link {
+  color: #fff !important;
+}
+
+.nav-link:hover {
+  color: #fce4ec !important;
+}
+
+.card-header.bg-dark {
+  background-color: #ad1457 !important;
+}
+
+.card {
+  border-color: #f48fb1;
+  box-shadow: 0 2px 8px rgba(194, 24, 91, 0.1);
+}
+
+.btn-dark {
+  background-color: #c2185b !important;
+  border-color: #ad1457 !important;
+}
+
+.btn-dark:hover {
+  background-color: #ad1457 !important;
+}
+
+.btn-success {
+  background-color: #e91e8c !important;
+  border-color: #c2185b !important;
+}
+
+.btn-success:hover {
+  background-color: #c2185b !important;
+}
+
+.btn-warning {
+  background-color: #f06292 !important;
+  border-color: #ec407a !important;
+  color: white !important;
+}
+
+.btn-warning:hover {
+  background-color: #ec407a !important;
+}
+
+.btn-danger {
+  background-color: #880e4f !important;
+  border-color: #880e4f !important;
+}
+
+.btn-danger:hover {
+  background-color: #6a0039 !important;
+}
+
+.btn-outline-light {
+  border-color: #fce4ec !important;
+  color: #fce4ec !important;
+}
+
+.btn-outline-light:hover {
+  background-color: #fce4ec !important;
+  color: #c2185b !important;
+}
+
+.table-dark {
+  background-color: #c2185b !important;
+}
+
+.table-striped > tbody > tr:nth-of-type(odd) {
+  background-color: #fce4ec;
+}
+
+.alert-success {
+  background-color: #fce4ec;
+  border-color: #f48fb1;
+  color: #880e4f;
+}
+
+.alert-danger {
+  background-color: #ffdde9;
+  border-color: #f48fb1;
+  color: #880e4f;
+}
+
+.alert-info {
+  background-color: #fce4ec;
+  border-color: #f48fb1;
+  color: #880e4f;
+}
+
+.form-control:focus, .form-select:focus {
+  border-color: #f48fb1;
+  box-shadow: 0 0 0 0.2rem rgba(244, 143, 177, 0.25);
+}
