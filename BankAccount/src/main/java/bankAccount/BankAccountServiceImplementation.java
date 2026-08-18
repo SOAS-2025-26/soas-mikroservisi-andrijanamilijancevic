@@ -7,8 +7,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import feign.FeignException;
 import jakarta.servlet.http.HttpServletRequest;
 import serviceLibrary.dto.bankAccount.BankAccountDto;
+import serviceLibrary.dto.usersService.UserDto;
+import serviceLibrary.proxies.UsersServiceProxy;
 import serviceLibrary.services.bankAccount.BankAccountService;
 
 @RestController
@@ -19,6 +24,10 @@ public class BankAccountServiceImplementation implements BankAccountService {
     
     @Autowired
     private HttpServletRequest request;
+    @Autowired
+    private UsersServiceProxy usersServiceProxy;
+
+    private final ObjectMapper mapper = new ObjectMapper();
 
     public BankAccountDto modelToDto(BankAccountModel model) {
         return new BankAccountDto(model.getEmail(), model.getCurrencyCode(), model.getAmount());
@@ -93,7 +102,20 @@ public class BankAccountServiceImplementation implements BankAccountService {
         if ("USER".equalsIgnoreCase(callerRole)) {
             return ResponseEntity.status(403).body("Access denied.");
         }
-       
+
+        UserDto user;
+        try {
+            user = mapper.convertValue(
+                    usersServiceProxy.getUserByEmail(body.getEmail()).getBody(), UserDto.class);
+        } catch (FeignException.NotFound e) {
+            return ResponseEntity.status(404)
+                    .body("No user with email: " + body.getEmail() + " exists in the system!");
+        }
+        if (!"USER".equalsIgnoreCase(user.getRole())) {
+            return ResponseEntity.status(400)
+                    .body("Bank accounts can only be created for users with role USER!");
+        }
+
         BankAccountModel existing = repo.findByEmailIgnoreCaseAndCurrencyCodeIgnoreCase(
                 body.getEmail(), body.getCurrencyCode());
         if (existing != null) {

@@ -74,17 +74,8 @@
     <div class="card mb-3">
       <div class="card-header bg-dark text-white">Ažuriraj novčanik</div>
       <div class="card-body">
-        <input class="form-control mb-2" [(ngModel)]="updateData.email" placeholder="Email" [readonly]="true">
-        <select class="form-select mb-2" [(ngModel)]="updateData.currencyCode">
-          <option value="BTC">BTC - Bitcoin</option>
-          <option value="ETH">ETH - Ethereum</option>
-          <option value="SOL">SOL - Solana</option>
-          <option value="ADA">ADA - Cardano</option>
-          <option value="DOGE">DOGE - Dogecoin</option>
-          <option value="XRP">XRP - Ripple</option>
-          <option value="DOT">DOT - Polkadot</option>
-          <option value="LTC">LTC - Litecoin</option>
-        </select>
+               <input class="form-control mb-2" [(ngModel)]="updateData.email" placeholder="Email" [readonly]="true">
+        <input class="form-control mb-2" [(ngModel)]="updateData.currencyCode" placeholder="Valuta" [readonly]="true">
         <input class="form-control mb-2" type="number" [(ngModel)]="updateData.amount" placeholder="Novi iznos">
         <button class="btn btn-warning" (click)="updateWallet()">Ažuriraj</button>
       </div>

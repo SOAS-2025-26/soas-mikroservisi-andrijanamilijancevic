@@ -124,7 +124,9 @@ public class UsersServiceImplementation implements UsersService {
                     .body("Admin can only update users with role USER, and cannot change their role!");
         }
 
-        existing.setPassword(body.getPassword());
+        if (body.getPassword() != null && !body.getPassword().isBlank()) {
+            existing.setPassword(body.getPassword());
+        }
         existing.setRole(body.getRole().toUpperCase());
         repo.save(existing);
 

@@ -10,6 +10,10 @@ import org.springframework.web.bind.annotation.RestController;
 import jakarta.servlet.http.HttpServletRequest;
 import serviceLibrary.dto.cryptoWallet.CryptoWalletDto;
 import serviceLibrary.services.cryptoWallet.CryptoWalletService;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import feign.FeignException;
+import serviceLibrary.dto.usersService.UserDto;
+import serviceLibrary.proxies.UsersServiceProxy;
 
 @RestController
 public class CryptoWalletServiceImplementation implements CryptoWalletService {
@@ -19,6 +23,10 @@ public class CryptoWalletServiceImplementation implements CryptoWalletService {
     
     @Autowired
     private HttpServletRequest request;
+    @Autowired
+    private UsersServiceProxy usersServiceProxy;
+
+    private final ObjectMapper mapper = new ObjectMapper();
 
     public CryptoWalletDto modelToDto(CryptoWalletModel model) {
         return new CryptoWalletDto(model.getEmail(), model.getCurrencyCode(), model.getAmount());
@@ -93,7 +101,20 @@ public class CryptoWalletServiceImplementation implements CryptoWalletService {
         if ("USER".equalsIgnoreCase(callerRole)) {
             return ResponseEntity.status(403).body("Access denied.");
         }
-        
+
+        UserDto user;
+        try {
+            user = mapper.convertValue(
+                    usersServiceProxy.getUserByEmail(body.getEmail()).getBody(), UserDto.class);
+        } catch (FeignException.NotFound e) {
+            return ResponseEntity.status(404)
+                    .body("No user with email: " + body.getEmail() + " exists in the system!");
+        }
+        if (!"USER".equalsIgnoreCase(user.getRole())) {
+            return ResponseEntity.status(400)
+                    .body("Crypto wallets can only be created for users with role USER!");
+        }
+
         CryptoWalletModel existing = repo.findByEmailIgnoreCaseAndCurrencyCodeIgnoreCase(
                 body.getEmail(), body.getCurrencyCode());
         if (existing != null) {

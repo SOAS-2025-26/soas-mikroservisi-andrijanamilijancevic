@@ -76,17 +76,8 @@
     <div class="card mb-3">
       <div class="card-header bg-dark text-white">Ažuriraj račun</div>
       <div class="card-body">
-        <input class="form-control mb-2" [(ngModel)]="updateData.email" placeholder="Email" [readonly]="true">
-        <select class="form-select mb-2" [(ngModel)]="updateData.currencyCode">
-          <option value="USD">USD - Američki dolar</option>
-          <option value="EUR">EUR - Euro</option>
-          <option value="RSD">RSD - Srpski dinar</option>
-          <option value="GBP">GBP - Britanska funta</option>
-          <option value="CHF">CHF - Švajcarski franak</option>
-          <option value="JPY">JPY - Japanski jen</option>
-          <option value="CAD">CAD - Kanadski dolar</option>
-          <option value="AUD">AUD - Australijski dolar</option>
-        </select>
+                <input class="form-control mb-2" [(ngModel)]="updateData.email" placeholder="Email" [readonly]="true">
+        <input class="form-control mb-2" [(ngModel)]="updateData.currencyCode" placeholder="Valuta" [readonly]="true">
         <input class="form-control mb-2" type="number" [(ngModel)]="updateData.amount" placeholder="Novi iznos">
         <button class="btn btn-warning" (click)="updateAccount()">Ažuriraj</button>
       </div>
